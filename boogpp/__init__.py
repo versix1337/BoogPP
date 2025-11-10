@@ -9,7 +9,4 @@ __version__ = "3.0.0"
 __author__ = "Boogpp Development Team"
 __license__ = "MIT"
 
-# Import main compiler module for convenience
-from . import compiler
-
-__all__ = ['compiler']
+__all__ = []
