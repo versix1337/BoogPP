@@ -2,6 +2,27 @@
 
 Complete installation guide for the Boogpp Programming Language.
 
+## Automated Windows Setup ⚡
+
+**For Windows users, we provide automated setup scripts:**
+
+```powershell
+# PowerShell (Recommended)
+Set-ExecutionPolicy Bypass -Scope Process -Force
+.\setup-windows.ps1
+```
+
+Or:
+
+```cmd
+# Batch file
+setup-windows.bat
+```
+
+See [SETUP-WINDOWS-README.md](SETUP-WINDOWS-README.md) for details.
+
+---
+
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Quick Install](#quick-install)
