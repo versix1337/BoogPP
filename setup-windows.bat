@@ -53,10 +53,7 @@ if %errorLevel% neq 0 (
     echo [INFO] Chocolatey not found. Installing Chocolatey...
     echo        This will take a moment...
 
-    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "Set-ExecutionPolicy Bypass -Scope Process -Force; ^
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ^
-    iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
 
     if %errorLevel% neq 0 (
         echo [WARNING] Chocolatey installation failed.
