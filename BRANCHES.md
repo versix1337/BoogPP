@@ -4,6 +4,8 @@ This repository uses a structured branching strategy to organize development pha
 
 ## Branch Structure
 
+> **Note**: During active development sessions, branches are created with a `claude/` prefix and session ID suffix for tracking purposes. These will be merged into the permanent branches (`main`, `dev`, etc.) via pull requests.
+
 ### Main Branches
 
 #### `main`
@@ -129,9 +131,18 @@ git merge hotfix/issue-description
 | Branch | Status | Version | Last Update |
 |--------|--------|---------|-------------|
 | `main` | ✅ Stable | 2.0.0 | 2025-11-10 |
-| `dev` | 🚧 Active | 2.0.0 | 2025-11-10 |
-| `phase-1-foundation` | ✅ Complete | 1.0.0 | 2025-11-10 |
-| `phase-2-advanced` | ✅ Complete | 2.0.0 | 2025-11-10 |
+| `claude/dev-*` | 🚧 Active | 2.0.0 | 2025-11-10 |
+| `claude/phase-1-foundation-*` | ✅ Complete | 1.0.0 | 2025-11-10 |
+| `claude/phase-2-advanced-*` | ✅ Complete | 2.0.0 | 2025-11-10 |
+
+### Active Development Branches
+
+These branches are currently in development and will be merged to main via pull requests:
+
+- `claude/dev-011CUzBFBWFJFG99AGNLemf5` - Current development branch
+- `claude/phase-1-foundation-011CUzBFBWFJFG99AGNLemf5` - Phase 1 implementation
+- `claude/phase-2-advanced-011CUzBFBWFJFG99AGNLemf5` - Phase 2 implementation
+- `claude/rename-customos-to-boogpp-011CUzBFBWFJFG99AGNLemf5` - Rebranding (merged)
 
 ## Guidelines
 
