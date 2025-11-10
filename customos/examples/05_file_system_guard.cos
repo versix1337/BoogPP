@@ -1,0 +1,73 @@
+###
+CustomOS Example 5: File System Guard
+Demonstrates file system hooks to protect critical files.
+###
+
+@safety_level(mode: SAFE)
+module file_system_guard
+
+import std.io
+import std.fs
+import std.time
+
+var protected_paths: array[string, 5] = [
+    "C:\\Windows\\System32\\",
+    "C:\\Windows\\SysWOW64\\",
+    "C:\\Program Files\\",
+    "C:\\Program Files (x86)\\"
+]
+
+func is_protected_path(path: string) -> bool:
+    for protected in protected_paths:
+        if path.starts_with(protected):
+            return true
+    return false
+
+@hook(event: FILE_WRITE, path: "C:\\Windows\\*")
+func onSystemFileWrite(path: string, pid: u32) -> i32:
+    let timestamp = std.time.now()
+
+    if is_protected_path(path):
+        std.io.log("[" + timestamp + "] ALERT: Write attempt to protected file: " + path + " by PID " + string(pid))
+
+        # Allow writes to temp directories
+        if "\\Temp\\" in path or "\\tmp\\" in path:
+            return ALLOW_OPERATION
+
+        # Block other writes
+        std.io.log("BLOCKED: Write operation denied")
+        return BLOCK_OPERATION
+
+    return ALLOW_OPERATION
+
+@hook(event: FILE_DELETE)
+func onFileDelete(path: string, pid: u32) -> i32:
+    let timestamp = std.time.now()
+
+    if is_protected_path(path):
+        std.io.log("[" + timestamp + "] ALERT: Delete attempt on protected file: " + path + " by PID " + string(pid))
+        std.io.log("BLOCKED: Delete operation denied")
+        return BLOCK_OPERATION
+
+    return ALLOW_OPERATION
+
+@hook(event: FILE_READ, path: "C:\\Windows\\System32\\config\\*")
+func onSensitiveFileRead(path: string, pid: u32) -> void:
+    # Log reads of sensitive system files
+    let timestamp = std.time.now()
+    std.io.log("[" + timestamp + "] INFO: Sensitive file read: " + path + " by PID " + string(pid))
+
+func main() -> i32:
+    std.io.println("File System Guard Active")
+    std.io.println("Protecting critical system directories:")
+
+    for path in protected_paths:
+        std.io.println("  - " + path)
+
+    std.io.println("")
+    std.io.println("Monitoring active... Press Ctrl+C to exit")
+
+    while true:
+        sleep(1000)
+
+    return SUCCESS
