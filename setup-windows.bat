@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================================
-REM Boogpp Setup Script for Windows
+REM boogpp Setup Script for Windows
 REM Automatically checks and installs dependencies, then builds the project
 REM ============================================================================
 
@@ -8,7 +8,7 @@ setlocal EnableDelayedExpansion
 
 echo.
 echo ========================================================================
-echo                    Boogpp Setup for Windows
+echo                    boogpp Setup for Windows
 echo ========================================================================
 echo.
 
@@ -25,7 +25,7 @@ REM ============================================================================
 REM Step 1: Check Python
 REM ============================================================================
 
-echo [1/6] Checking Python installation...
+echo [1/5] Checking Python installation...
 
 python --version >nul 2>&1
 if %errorLevel% neq 0 (
@@ -43,213 +43,120 @@ if %errorLevel% neq 0 (
 )
 
 REM ============================================================================
-REM Step 2: Check/Install Chocolatey (Package Manager)
+REM Step 2: Create Virtual Environment
 REM ============================================================================
 
-echo [2/6] Checking Chocolatey package manager...
+echo [2/5] Setting up Python virtual environment...
 
-where choco >nul 2>&1
-if %errorLevel% neq 0 (
-    echo [INFO] Chocolatey not found. Installing Chocolatey...
-    echo        This will take a moment...
-
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
-
+if not exist "venv" (
+    echo [INFO] Creating virtual environment...
+    python -m venv venv
     if %errorLevel% neq 0 (
-        echo [WARNING] Chocolatey installation failed.
-        echo           You may need to install dependencies manually.
-    ) else (
-        echo [OK] Chocolatey installed successfully
-        REM Refresh environment
-        call refreshenv
-    )
-) else (
-    echo [OK] Chocolatey already installed
-)
-
-REM ============================================================================
-REM Step 3: Check/Install MinGW (GCC for Windows)
-REM ============================================================================
-
-echo [3/6] Checking GCC/MinGW installation...
-
-where gcc >nul 2>&1
-if %errorLevel% neq 0 (
-    echo [INFO] GCC not found. Installing MinGW...
-
-    where choco >nul 2>&1
-    if %errorLevel% equ 0 (
-        choco install mingw -y
-        if %errorLevel% neq 0 (
-            echo [ERROR] MinGW installation failed
-            echo Please install MinGW manually from: https://www.mingw-w64.org/
-            pause
-            exit /b 1
-        )
-        REM Refresh environment
-        call refreshenv
-    ) else (
-        echo [ERROR] Cannot install MinGW without Chocolatey
-        echo Please install MinGW manually from: https://www.mingw-w64.org/
+        echo [ERROR] Failed to create virtual environment
         pause
         exit /b 1
     )
+    echo [OK] Virtual environment created
 ) else (
-    for /f "tokens=3" %%i in ('gcc --version 2^>^&1 ^| findstr /C:"gcc"') do set GCC_VERSION=%%i
-    echo [OK] GCC found (version !GCC_VERSION!)
+    echo [OK] Virtual environment already exists
 )
 
-REM ============================================================================
-REM Step 4: Check/Install Make
-REM ============================================================================
-
-echo [4/6] Checking Make installation...
-
-where mingw32-make >nul 2>&1
+REM Activate virtual environment
+call venv\Scripts\activate.bat
 if %errorLevel% neq 0 (
-    where make >nul 2>&1
-    if %errorLevel% neq 0 (
-        echo [INFO] Make not found. Installing...
-
-        where choco >nul 2>&1
-        if %errorLevel% equ 0 (
-            choco install make -y
-            if %errorLevel% neq 0 (
-                echo [WARNING] Make installation failed
-                echo Will try to use mingw32-make instead
-            )
-        )
-    ) else (
-        echo [OK] Make found
-    )
-) else (
-    echo [OK] MinGW Make found
-    set MAKE_CMD=mingw32-make
-)
-
-REM Set make command
-where make >nul 2>&1
-if %errorLevel% equ 0 (
-    set MAKE_CMD=make
-) else (
-    where mingw32-make >nul 2>&1
-    if %errorLevel% equ 0 (
-        set MAKE_CMD=mingw32-make
-    ) else (
-        echo [ERROR] No Make utility found!
-        echo Please install Make or MinGW
-        pause
-        exit /b 1
-    )
-)
-
-echo [INFO] Using make command: !MAKE_CMD!
-
-REM ============================================================================
-REM Step 5: Optional - Check LLVM
-REM ============================================================================
-
-echo [5/6] Checking LLVM installation (optional for native binaries)...
-
-where llc >nul 2>&1
-if %errorLevel% neq 0 (
-    echo [INFO] LLVM not found (optional)
-    echo       You can compile to LLVM IR, but not native binaries
-    echo       Install LLVM from: https://releases.llvm.org/download.html
-    set HAS_LLVM=0
-) else (
-    for /f "tokens=3" %%i in ('llc --version 2^>^&1 ^| findstr /C:"version"') do set LLVM_VERSION=%%i
-    echo [OK] LLVM found (version !LLVM_VERSION!)
-    set HAS_LLVM=1
-)
-
-REM ============================================================================
-REM Step 6: Build Boogpp
-REM ============================================================================
-
-echo [6/6] Building Boogpp...
-echo.
-
-REM Build runtime library
-echo Building runtime library...
-cd boogpp\runtime
-!MAKE_CMD! release
-if %errorLevel% neq 0 (
-    echo [ERROR] Runtime build failed!
-    cd ..\..
+    echo [ERROR] Failed to activate virtual environment
     pause
     exit /b 1
 )
-cd ..\..
 
-REM Build Windows standard library
-echo Building Windows standard library...
-cd boogpp\stdlib\windows
-!MAKE_CMD! -f ..\..\Makefile.stdlib release
+echo [OK] Virtual environment activated
+
+REM ============================================================================
+REM Step 3: Install Python Dependencies
+REM ============================================================================
+
+echo [3/5] Installing Python dependencies...
+
+pip install --upgrade pip setuptools wheel >nul 2>&1
 if %errorLevel% neq 0 (
-    echo [ERROR] Standard library build failed!
-    cd ..\..\..
+    echo [WARNING] Failed to upgrade pip
+)
+
+REM Install optional dependencies
+pip install llvmlite llvm >nul 2>&1
+if %errorLevel% neq 0 (
+    echo [INFO] LLVM bindings not available (optional - for native compilation)
+)
+
+echo [OK] Python dependencies ready
+
+REM ============================================================================
+REM Step 4: Build boogpp Components
+REM ============================================================================
+
+echo [4/5] Building boogpp compiler...
+
+REM Test lexer
+python -c "from lexer import Lexer; print('Lexer module loaded')" >nul 2>&1
+if %errorLevel% neq 0 (
+    echo [ERROR] Lexer module failed to load
     pause
     exit /b 1
 )
-cd ..\..\..
 
-REM Test compiler
-echo Testing compiler...
-cd boogpp
-python -c "from compiler import __version__; print('Compiler version:', __version__)"
+REM Test parser
+python -c "from parser import Parser; print('Parser module loaded')" >nul 2>&1
 if %errorLevel% neq 0 (
-    echo [ERROR] Compiler test failed!
-    cd ..
+    echo [ERROR] Parser module failed to load
     pause
     exit /b 1
 )
-cd ..
+
+echo [OK] Compiler modules loaded successfully
+
+REM ============================================================================
+REM Step 5: Create Build Directories
+REM ============================================================================
+
+echo [5/5] Setting up build directories...
+
+if not exist "build" mkdir build
+if not exist "dist" mkdir dist
+if not exist "bin" mkdir bin
+
+echo [OK] Build directories created
 
 echo.
 echo ========================================================================
-echo                    Build Complete!
+echo                    Setup Complete!
 echo ========================================================================
 echo.
-echo [OK] Boogpp v3.0.0 is now built and ready to use!
+echo [OK] boogpp v0.1.0 is now ready for development!
 echo.
 echo Built components:
-echo   - Runtime library:     boogpp\runtime\lib\libboogpp_runtime.a
-echo   - Windows stdlib:      boogpp\stdlib\windows\lib\libboogpp_windows.a
-echo   - Boogpp compiler:     boogpp\compiler\
+echo   - Lexer:               lexer.py
+echo   - Parser:              parser.py
+echo   - AST Nodes:           ast_nodes.py
+echo   - Test Framework:      test_lexer_parser.py
 echo.
 echo ========================================================================
-echo                    Usage Instructions
+echo                    Next Steps
 echo ========================================================================
 echo.
-echo To compile a Boogpp program:
-echo   python -m boogpp.compiler.cli build program.bpp -o program.ll
+echo 1. Run tests to verify setup:
+echo    python test_lexer_parser.py
 echo.
-echo To run tests:
-echo   cd boogpp\runtime
-echo   !MAKE_CMD! test
+echo 2. Start developing:
+echo    - Type checker: type_checker.py
+echo    - Safety system: safety.py
+echo    - Code generator: codegen.py
 echo.
-echo To create a native binary (requires LLVM):
-
-if !HAS_LLVM! equ 1 (
-    echo   llc -filetype=obj program.ll -o program.o
-    echo   clang program.o boogpp\runtime\lib\libboogpp_runtime.a -o program.exe
-) else (
-    echo   [Install LLVM first from https://releases.llvm.org/]
-)
-
+echo 3. Compile boogpp programs:
+echo    python -m boogpp build program.os -o program.exe
 echo.
-echo For more information, see INSTALL.md and README.md
+echo For more information, see README.md
 echo.
 echo ========================================================================
-echo.
-
-REM Create convenience batch file for boogpp command
-echo @echo off > boogpp.bat
-echo python -m boogpp.compiler.cli %%* >> boogpp.bat
-
-echo [INFO] Created boogpp.bat wrapper script
-echo       You can now use: boogpp.bat build program.bpp
 echo.
 
 pause
