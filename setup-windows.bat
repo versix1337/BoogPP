@@ -94,10 +94,21 @@ REM ============================================================================
 REM Step 4: Build boogpp Components
 REM ============================================================================
 
-echo [4/5] Building boogpp compiler...
+echo [4/5] Validating boogpp compiler...
+
+REM Set PYTHONPATH to include current directory
+set PYTHONPATH=%CD%
+
+REM Test compiler module
+python -c "from boogpp.compiler import __version__; print('Boogpp version:', __version__)" 2>&1
+if %errorLevel% neq 0 (
+    echo [ERROR] Failed to import boogpp compiler module
+    pause
+    exit /b 1
+)
 
 REM Test lexer
-python -c "from lexer import Lexer; print('Lexer module loaded')" >nul 2>&1
+python -c "from boogpp.compiler.lexer import Lexer; print('Lexer module: OK')" 2>&1
 if %errorLevel% neq 0 (
     echo [ERROR] Lexer module failed to load
     pause
@@ -105,14 +116,14 @@ if %errorLevel% neq 0 (
 )
 
 REM Test parser
-python -c "from parser import Parser; print('Parser module loaded')" >nul 2>&1
+python -c "from boogpp.compiler.parser import Parser; print('Parser module: OK')" 2>&1
 if %errorLevel% neq 0 (
     echo [ERROR] Parser module failed to load
     pause
     exit /b 1
 )
 
-echo [OK] Compiler modules loaded successfully
+echo [OK] Compiler modules validated successfully
 
 REM ============================================================================
 REM Step 5: Create Build Directories
@@ -131,28 +142,27 @@ echo ========================================================================
 echo                    Setup Complete!
 echo ========================================================================
 echo.
-echo [OK] boogpp v0.1.0 is now ready for development!
+echo [OK] Boogpp v3.0.0 Python environment is ready for development!
 echo.
-echo Built components:
-echo   - Lexer:               lexer.py
-echo   - Parser:              parser.py
-echo   - AST Nodes:           ast_nodes.py
-echo   - Test Framework:      test_lexer_parser.py
+echo Available modules:
+echo   - Lexer:               boogpp.compiler.lexer
+echo   - Parser:              boogpp.compiler.parser
+echo   - Type Checker:        boogpp.compiler.typechecker
+echo   - Safety Checker:      boogpp.compiler.safety
+echo   - Code Generator:      boogpp.compiler.codegen
 echo.
 echo ========================================================================
 echo                    Next Steps
 echo ========================================================================
 echo.
-echo 1. Run tests to verify setup:
-echo    python test_lexer_parser.py
+echo 1. Run tests to verify compiler:
+echo    python test_compiler.py
 echo.
-echo 2. Start developing:
-echo    - Type checker: type_checker.py
-echo    - Safety system: safety.py
-echo    - Code generator: codegen.py
+echo 2. Compile a Boogpp program:
+echo    python -m boogpp.compiler.cli build program.bpp -o program.ll
 echo.
-echo 3. Compile boogpp programs:
-echo    python -m boogpp build program.os -o program.exe
+echo 3. For full build with C runtime (requires MinGW/Make):
+echo    See INSTALL.md for instructions
 echo.
 echo For more information, see README.md
 echo.
