@@ -6,6 +6,10 @@ REM ============================================================================
 
 setlocal EnableDelayedExpansion
 
+REM Ensure the script runs from its own directory so relative paths and
+REM imports resolve even when launched from elsewhere.
+pushd "%~dp0" >nul
+
 echo.
 echo ========================================================================
 echo                    boogpp Setup for Windows
@@ -96,8 +100,8 @@ REM ============================================================================
 
 echo [4/5] Validating boogpp compiler...
 
-REM Set PYTHONPATH to include current directory
-set PYTHONPATH=%CD%
+REM Set PYTHONPATH to include current directory without clobbering existing entries
+set "PYTHONPATH=%CD%;%PYTHONPATH%"
 
 REM Test compiler module
 python -c "from boogpp.compiler import __version__; print('Boogpp version:', __version__)" 2>&1
@@ -168,6 +172,8 @@ echo For more information, see README.md
 echo.
 echo ========================================================================
 echo.
+
+popd >nul
 
 pause
 exit /b 0
