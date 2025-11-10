@@ -729,7 +729,62 @@ class LLVMCodeGenerator:
     def _emit_stdlib_declarations(self) -> None:
         """Emit standard library function declarations"""
         self._emit("")
-        self._emit("; Standard library declarations")
+        self._emit("; Boogpp Runtime Library Declarations")
+        self._emit("")
+
+        # Runtime initialization
+        self._emit("declare i32 @bpp_runtime_init()")
+        self._emit("declare void @bpp_runtime_cleanup()")
+        self._emit("declare i8* @bpp_runtime_version()")
+        self._emit("")
+
+        # Memory management
+        self._emit("declare i8* @bpp_alloc(i64)")
+        self._emit("declare void @bpp_free(i8*)")
+        self._emit("declare i8* @bpp_realloc(i8*, i64)")
+        self._emit("declare void @bpp_refcount_inc(i8*)")
+        self._emit("declare void @bpp_refcount_dec(i8*)")
+        self._emit("")
+
+        # String operations (opaque type)
+        self._emit("%bpp_string_t = type opaque")
+        self._emit("declare %bpp_string_t* @bpp_string_new(i8*)")
+        self._emit("declare %bpp_string_t* @bpp_string_with_capacity(i64)")
+        self._emit("declare void @bpp_string_free(%bpp_string_t*)")
+        self._emit("declare %bpp_string_t* @bpp_string_concat(%bpp_string_t*, %bpp_string_t*)")
+        self._emit("declare i64 @bpp_string_length(%bpp_string_t*)")
+        self._emit("declare i32 @bpp_string_compare(%bpp_string_t*, %bpp_string_t*)")
+        self._emit("")
+
+        # I/O operations
+        self._emit("declare i32 @bpp_print(%bpp_string_t*)")
+        self._emit("declare i32 @bpp_println(%bpp_string_t*)")
+        self._emit("declare i32 @bpp_log(%bpp_string_t*)")
+        self._emit("declare %bpp_string_t* @bpp_read_line()")
+        self._emit("")
+
+        # Array operations (opaque type)
+        self._emit("%bpp_array_t = type opaque")
+        self._emit("declare %bpp_array_t* @bpp_array_new(i64, i64)")
+        self._emit("declare void @bpp_array_free(%bpp_array_t*)")
+        self._emit("declare i8* @bpp_array_get(%bpp_array_t*, i64)")
+        self._emit("declare i32 @bpp_array_set(%bpp_array_t*, i64, i8*)")
+        self._emit("")
+
+        # Slice operations (opaque type)
+        self._emit("%bpp_slice_t = type opaque")
+        self._emit("declare %bpp_slice_t* @bpp_slice_new(%bpp_array_t*, i64, i64)")
+        self._emit("declare void @bpp_slice_free(%bpp_slice_t*)")
+        self._emit("")
+
+        # Utility functions
+        self._emit("declare void @bpp_sleep(i32)")
+        self._emit("declare i64 @bpp_timestamp_ms()")
+        self._emit("declare i8* @bpp_status_string(i32)")
+        self._emit("")
+
+        # C standard library (for compatibility)
+        self._emit("; C Standard Library")
         self._emit("declare void @print(i8*)")
         self._emit("declare i8* @malloc(i64)")
         self._emit("declare void @free(i8*)")
