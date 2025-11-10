@@ -1,0 +1,56 @@
+###
+CustomOS Example 4: Windows Service
+Demonstrates creating a Windows service with automatic restart.
+###
+
+@safety_level(mode: SAFE)
+module system_service
+
+import windows.registry
+import windows.services
+import std.io
+import std.time
+
+var service_running: bool = true
+
+@resilient(max_attempts: 5, timeout: 5000ms, backoff: EXPONENTIAL)
+func check_system_health() -> (i32, string):
+    # Check various system metrics
+    return try_chain:
+        primary:
+            windows.registry.read("HKLM\\Software\\MyApp", "HealthStatus")
+        secondary:
+            (SUCCESS, "OK")
+        fallback:
+            (GENERIC_ERROR, "UNKNOWN")
+
+func perform_health_check() -> void:
+    status, health = check_system_health()
+
+    if status == SUCCESS:
+        std.io.log("System health check: " + health)
+    else:
+        std.io.log("WARNING: Health check failed")
+
+@service(
+    name: "CustomOSHealthMonitor",
+    display_name: "CustomOS Health Monitor",
+    description: "Monitors system health and logs status",
+    start_type: AUTO,
+    run_as: SYSTEM
+)
+func main_service() -> i32:
+    std.io.log("CustomOS Health Monitor Service starting...")
+
+    while service_running and isRunning():
+        # Perform health check every 30 seconds
+        perform_health_check()
+
+        # Sleep for 30 seconds
+        sleep(30000)
+
+    std.io.log("CustomOS Health Monitor Service stopping...")
+    return SUCCESS
+
+func main() -> i32:
+    return main_service()
