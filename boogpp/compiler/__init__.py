@@ -4,9 +4,10 @@ A Windows-centric systems programming language compiler.
 
 Phase 1: Lexer, Parser, Basic Safety Checker
 Phase 2: Type Checker, Enhanced Safety Enforcement, LLVM Code Generation
+Phase 3: Runtime Library (Memory, Strings, I/O, Arrays)
 """
 
-__version__ = "2.0.0"
+__version__ = "3.0.0"
 
 from .lexer import Lexer, tokenize
 from .parser import Parser, parse
