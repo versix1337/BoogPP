@@ -1,0 +1,45 @@
+###
+Boogpp Example 2: Registry Reader
+Demonstrates Windows registry access with try_chain resilience.
+###
+
+@safety_level(mode: SAFE)
+module registry_reader
+
+import windows.registry
+import std.io
+
+@resilient(max_attempts: 3, timeout: 2000ms)
+func readRegistryKey(key: string, value: string) -> (i32, string):
+    return try_chain:
+        primary:
+            windows.registry.read(key, value)
+        secondary:
+            (SUCCESS, "DEFAULT_VALUE")
+        fallback:
+            (GENERIC_ERROR, "")
+
+func main() -> i32:
+    std.io.println("Reading Windows Registry...")
+
+    # Read Windows version
+    status, version = readRegistryKey(
+        "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion",
+        "ProductName"
+    )
+
+    if status == SUCCESS:
+        std.io.println("Windows Version: " + version)
+    else:
+        std.io.println("Failed to read registry")
+
+    # Read current user
+    status, username = readRegistryKey(
+        "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+        "Logon User Name"
+    )
+
+    if status == SUCCESS:
+        std.io.println("Current User: " + username)
+
+    return SUCCESS
