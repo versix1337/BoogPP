@@ -87,6 +87,9 @@ REM ============================================================================
 
 echo [4/5] Validating Boogpp compiler modules...
 
+REM Set PYTHONPATH to include current directory
+set PYTHONPATH=%CD%
+
 REM Test compiler module from root
 python -c "from boogpp.compiler import __version__; print('Boogpp version:', __version__)" 2>&1
 if %errorLevel% neq 0 (
