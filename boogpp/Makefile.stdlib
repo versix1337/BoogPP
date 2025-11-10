@@ -1,0 +1,49 @@
+# Makefile for Windows Standard Library
+
+CC = gcc
+AR = ar
+CFLAGS = -Wall -Wextra -std=c11 -O2 -Iinclude -I../runtime/include
+CFLAGS_DEBUG = -Wall -Wextra -std=c11 -g -O0 -Iinclude -I../runtime/include -DBPP_DEBUG
+
+SRC_DIR = src
+INC_DIR = include
+BUILD_DIR = build
+LIB_DIR = lib
+
+SOURCES = $(wildcard $(SRC_DIR)/*.c)
+OBJECTS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SOURCES))
+OBJECTS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%-debug.o,$(SOURCES))
+
+LIB_NAME = libboogpp_windows.a
+LIB_NAME_DEBUG = libboogpp_windows_debug.a
+
+.PHONY: all clean release debug
+
+all: release
+
+release: $(LIB_DIR)/$(LIB_NAME)
+
+debug: $(LIB_DIR)/$(LIB_NAME_DEBUG)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(LIB_DIR):
+	mkdir -p $(LIB_DIR)
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%-debug.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS_DEBUG) -c $< -o $@
+
+$(LIB_DIR)/$(LIB_NAME): $(OBJECTS) | $(LIB_DIR)
+	$(AR) rcs $@ $^
+	@echo "Built Windows stdlib: $@"
+
+$(LIB_DIR)/$(LIB_NAME_DEBUG): $(OBJECTS_DEBUG) | $(LIB_DIR)
+	$(AR) rcs $@ $^
+	@echo "Built Windows stdlib (debug): $@"
+
+clean:
+	rm -rf $(BUILD_DIR) $(LIB_DIR)
