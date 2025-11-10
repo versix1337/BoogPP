@@ -1,5 +1,5 @@
 """
-CustomOS Parser Module
+Boog++ Parser Module
 """
 
 from .parser import Parser, ParseError, parse

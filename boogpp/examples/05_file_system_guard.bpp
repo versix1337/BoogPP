@@ -1,5 +1,5 @@
 ###
-CustomOS Example 5: File System Guard
+Boog++ Example 5: File System Guard
 Demonstrates file system hooks to protect critical files.
 ###
 

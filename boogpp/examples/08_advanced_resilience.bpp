@@ -1,5 +1,5 @@
 ###
-CustomOS Example 8: Advanced Resilience
+Boog++ Example 8: Advanced Resilience
 Demonstrates try_chain with complex failover scenarios.
 ###
 

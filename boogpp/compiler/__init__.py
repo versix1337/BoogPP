@@ -1,5 +1,5 @@
 """
-CustomOS Compiler
+Boog++ Compiler
 A Windows-centric systems programming language compiler.
 """
 

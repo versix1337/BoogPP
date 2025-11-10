@@ -1,5 +1,5 @@
 """
-CustomOS Token Definitions
+Boog++ Token Definitions
 Defines all token types used by the lexer.
 """
 
@@ -9,7 +9,7 @@ from typing import Any, Optional
 
 
 class TokenType(Enum):
-    """All token types in CustomOS language"""
+    """All token types in Boog++ language"""
 
     # Keywords
     FUNC = auto()

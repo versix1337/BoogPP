@@ -1,5 +1,5 @@
 """
-CustomOS Lexer Module
+Boog++ Lexer Module
 """
 
 from .lexer import Lexer, LexerError, tokenize

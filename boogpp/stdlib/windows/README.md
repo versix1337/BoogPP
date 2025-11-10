@@ -1,6 +1,6 @@
-# CustomOS Windows API Bindings
+# Boog++ Windows API Bindings
 
-This directory contains Windows API bindings for CustomOS, providing direct access to Windows system calls with minimal boilerplate.
+This directory contains Windows API bindings for Boog++, providing direct access to Windows system calls with minimal boilerplate.
 
 ## Available Modules
 
@@ -95,7 +95,7 @@ Process management and monitoring.
 - `inject_dll(pid, dll_path) -> status` [UNSAFE]
 
 **ProcessInfo Structure:**
-```customos
+```boogpp
 struct ProcessInfo:
     pid: u32
     parent_pid: u32
@@ -146,10 +146,10 @@ Security and privilege management.
 
 ## Hook Events
 
-CustomOS provides system hooks that intercept Windows events:
+Boog++ provides system hooks that intercept Windows events:
 
 ### Process Hooks
-```customos
+```boogpp
 @hook(event: PROCESS_CREATION)
 func on_process_created(pid: u32, exe_path: string) -> i32:
     # Return ALLOW_PROCESS or BLOCK_PROCESS
@@ -161,7 +161,7 @@ func on_process_terminated(pid: u32, exit_code: i32) -> void:
 ```
 
 ### File System Hooks
-```customos
+```boogpp
 @hook(event: FILE_WRITE, path: "C:\\Windows\\System32\\*")
 func on_system_file_write(path: string, pid: u32) -> i32:
     # Return ALLOW_OPERATION or BLOCK_OPERATION
@@ -173,7 +173,7 @@ func on_file_delete(path: string, pid: u32) -> i32:
 ```
 
 ### Registry Hooks
-```customos
+```boogpp
 @hook(event: REGISTRY_WRITE, key: "HKLM\\Software\\*")
 func on_registry_write(key: string, value: string, data: string) -> i32:
     # Return ALLOW_OPERATION or BLOCK_OPERATION
@@ -181,7 +181,7 @@ func on_registry_write(key: string, value: string, data: string) -> i32:
 ```
 
 ### Network Hooks
-```customos
+```boogpp
 @hook(event: NETWORK_CONNECTION)
 func on_network_connection(pid: u32, remote_addr: string, remote_port: u16) -> i32:
     # Return ALLOW_CONNECTION or BLOCK_CONNECTION
@@ -200,11 +200,11 @@ func on_network_connection(pid: u32, remote_addr: string, remote_port: u16) -> i
 
 Create Windows services directly with the `@service` decorator:
 
-```customos
+```boogpp
 @service(
     name: "MyService",
-    display_name: "My CustomOS Service",
-    description: "A service written in CustomOS",
+    display_name: "My Boog++ Service",
+    description: "A service written in Boog++",
     start_type: AUTO,
     run_as: SYSTEM
 )
@@ -232,7 +232,7 @@ func main_service() -> i32:
 - Sensitive file operations
 
 ### Example with Safety:
-```customos
+```boogpp
 @safety_level(mode: SAFE)
 import windows.registry
 
@@ -257,7 +257,7 @@ All Windows API functions return status codes:
 - `0x000005` (INVALID_PARAMETER) - Invalid parameter
 
 Use `try_chain` for automatic error handling:
-```customos
+```boogpp
 result = try_chain:
     primary:
         windows.registry.read("HKLM\\Software\\Key", "Value")
@@ -271,17 +271,17 @@ result = try_chain:
 
 ### Compile to executable:
 ```bash
-customos build myapp.cos -o myapp.exe
+boogpp build myapp.bpp -o myapp.exe
 ```
 
 ### Compile to Windows service:
 ```bash
-customos build myservice.cos --type service -o myservice.exe
+boogpp build myservice.bpp --type service -o myservice.exe
 ```
 
 ### Compile to kernel driver:
 ```bash
-customos build mydriver.cos --type driver -o mydriver.sys --safety unsafe
+boogpp build mydriver.bpp --type driver -o mydriver.sys --safety unsafe
 ```
 
 ## Notes

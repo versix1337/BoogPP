@@ -1,10 +1,10 @@
-# CustomOS
+# Boog++
 
 A Windows-centric systems programming language combining Python-like syntax with C++ performance.
 
 ## Overview
 
-CustomOS is designed specifically for Windows system customization, featuring:
+Boog++ is designed specifically for Windows system customization, featuring:
 
 - **Python-like Syntax** - Clean, readable, whitespace-based
 - **C++ Performance** - Compiles to native machine code via LLVM
@@ -14,7 +14,7 @@ CustomOS is designed specifically for Windows system customization, featuring:
 
 ## Quick Start
 
-```customos
+```boogpp
 @safety_level(mode: SAFE)
 import windows.registry
 
@@ -38,7 +38,7 @@ func main() -> i32:
 - **CUSTOM Mode** - User-defined safety rules
 
 ### Resilience
-```customos
+```boogpp
 return try_chain:
     primary:
         http.post(url, data)
@@ -57,19 +57,19 @@ return try_chain:
 
 ## Documentation
 
-Full documentation is available in the [`customos/`](customos/) directory:
+Full documentation is available in the [`boogpp/`](boogpp/) directory:
 
-- [Language Specification](customos/docs/LANGUAGE_SPEC.md)
-- [Windows API Reference](customos/stdlib/windows/README.md)
-- [Examples](customos/examples/)
-- [Getting Started](customos/README.md)
+- [Language Specification](boogpp/docs/LANGUAGE_SPEC.md)
+- [Windows API Reference](boogpp/stdlib/windows/README.md)
+- [Examples](boogpp/examples/)
+- [Getting Started](boogpp/README.md)
 
 ## Installation
 
 ```bash
 # Clone the repository
 git clone https://github.com/versix1337/CehSim.git
-cd CehSim/customos
+cd CehSim/boogpp
 
 # Install dependencies
 pip install -r requirements.txt
@@ -80,7 +80,7 @@ python test_compiler.py
 
 ## Examples
 
-See the [examples directory](customos/examples/) for complete working examples including:
+See the [examples directory](boogpp/examples/) for complete working examples including:
 
 1. Registry access with resilience
 2. Process monitoring with hooks
@@ -94,16 +94,16 @@ See the [examples directory](customos/examples/) for complete working examples i
 
 ```bash
 # Compile to executable
-customos build main.cos -o output.exe
+boogpp build main.bpp -o output.exe
 
 # Compile with specific safety mode
-customos build main.cos --safety unsafe -o output.exe
+boogpp build main.bpp --safety unsafe -o output.exe
 
 # Compile to Windows service
-customos build service.cos --type service -o service.exe
+boogpp build service.bpp --type service -o service.exe
 
 # Check syntax without compiling
-customos check main.cos
+boogpp check main.bpp
 ```
 
 ## Status
@@ -128,8 +128,8 @@ MIT License - See LICENSE file for details
 
 ## Contributing
 
-Contributions are welcome! Please see the [CustomOS directory](customos/) for development guidelines.
+Contributions are welcome! Please see the [Boog++ directory](boogpp/) for development guidelines.
 
 ---
 
-**CustomOS** - Write Windows system tools with Python-like simplicity and C++ performance.
+**Boog++** - Write Windows system tools with Python-like simplicity and C++ performance.

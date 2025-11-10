@@ -1,7 +1,7 @@
-# CustomOS Language Specification v1.0
+# Boog++ Language Specification v1.0
 
 ## Overview
-CustomOS is a Windows-centric systems programming language that combines Python-like syntax with C++ performance, compiled to native machine code via LLVM.
+Boog++ is a Windows-centric systems programming language that combines Python-like syntax with C++ performance, compiled to native machine code via LLVM.
 
 ## Core Principles
 1. **Safety by Default**: Operations are checked and logged by default
@@ -60,7 +60,7 @@ CustomOS is a Windows-centric systems programming language that combines Python-
 - Custom validation functions
 
 ### Syntax
-```customos
+```boogpp
 @safety_level(mode: SAFE)  # File-level
 
 @unsafe  # Function-level override
@@ -76,7 +76,7 @@ func dangerousOperation() -> i32:
 ### try_chain
 Automatic fallback mechanism that tries multiple strategies:
 
-```customos
+```boogpp
 return try_chain:
     primary:
         operation1()
@@ -87,7 +87,7 @@ return try_chain:
 ```
 
 ### Resilient Decorator
-```customos
+```boogpp
 @resilient(max_attempts: 3, timeout: 2000ms, backoff: EXPONENTIAL)
 func unstableOperation() -> result[string]:
     # Automatically retried on failure
@@ -109,7 +109,7 @@ func unstableOperation() -> result[string]:
 ### API Access
 Direct Windows API access without FFI boilerplate:
 
-```customos
+```boogpp
 import windows.kernel32
 import windows.user32
 import windows.registry
@@ -121,7 +121,7 @@ registry.RegSetValueEx(...)
 ```
 
 ### System Hooks
-```customos
+```boogpp
 @hook(event: PROCESS_CREATION)
 func onProcessCreated(pid: u32, exe: string) -> i32:
     if suspicious(exe):
@@ -146,12 +146,12 @@ func onSystemFileWrite(path: string) -> i32:
 - `DRIVER_LOAD`
 
 ### Service Decorator
-```customos
+```boogpp
 @service(
-    name: "CustomOSService",
+    name: "Boog++Service",
     start_type: AUTO,
     run_as: SYSTEM,
-    description: "CustomOS background service"
+    description: "Boog++ background service"
 )
 func mainService() -> i32:
     while isRunning():
@@ -165,21 +165,21 @@ func mainService() -> i32:
 ## 5. Syntax
 
 ### Module Declaration
-```customos
+```boogpp
 @safety_level(mode: SAFE)
 @version("1.0.0")
 module my_module
 ```
 
 ### Imports
-```customos
+```boogpp
 import windows.registry
 import windows.kernel32 as k32
 from windows.user32 import MessageBoxW, FindWindowA
 ```
 
 ### Function Declaration
-```customos
+```boogpp
 func add(a: i32, b: i32) -> i32:
     return a + b
 
@@ -191,17 +191,17 @@ func noReturn() -> void:
 ```
 
 ### Variables
-```customos
+```boogpp
 let x: i32 = 42          # Immutable
 var y: string = "hello"  # Mutable
 
 # Type inference
 let z = 100              # Inferred as i32
-var name = "CustomOS"    # Inferred as string
+var name = "Boog++"    # Inferred as string
 ```
 
 ### Control Flow
-```customos
+```boogpp
 # If statements
 if condition:
     doSomething()
@@ -232,7 +232,7 @@ match value:
 ```
 
 ### Decorators
-```customos
+```boogpp
 @hook(event: PROCESS_CREATION)
 @resilient(max_attempts: 3)
 @log_calls
@@ -248,7 +248,7 @@ func myFunction() -> i32:
 Reference counted by default, with cycle detection.
 
 ### Manual Memory Management (UNSAFE mode)
-```customos
+```boogpp
 @unsafe
 func manualAlloc() -> ptr[u8]:
     let size = 1024
@@ -262,17 +262,17 @@ func manualAlloc() -> ptr[u8]:
 ## 7. Interoperability
 
 ### C/C++ Integration
-```customos
+```boogpp
 @extern("C")
 func external_function(x: i32) -> i32
 
 @export
-func customos_function(x: i32) -> i32:
+func boogpp_function(x: i32) -> i32:
     return x * 2
 ```
 
 ### DLL Loading
-```customos
+```boogpp
 import dll
 
 let lib = dll.load("my_library.dll")
@@ -286,7 +286,7 @@ let result = func(arg1, arg2)
 
 Compile to .sys files for kernel-mode drivers:
 
-```customos
+```boogpp
 @safety_level(mode: UNSAFE)
 @driver(
     name: "CustomDriver",
@@ -335,22 +335,22 @@ func DriverUnload(driver: ptr[DRIVER_OBJECT]) -> void:
 ### Command Line
 ```bash
 # Compile to executable
-customos build main.cos -o output.exe
+boogpp build main.bpp -o output.exe
 
 # Compile to DLL
-customos build lib.cos --type dll -o library.dll
+boogpp build lib.bpp --type dll -o library.dll
 
 # Compile to kernel driver
-customos build driver.cos --type driver -o driver.sys
+boogpp build driver.bpp --type driver -o driver.sys
 
 # Safety mode override
-customos build main.cos --safety unsafe -o output.exe
+boogpp build main.bpp --safety unsafe -o output.exe
 
 # Optimization levels
-customos build main.cos -O0  # No optimization
-customos build main.cos -O1  # Basic optimization
-customos build main.cos -O2  # Standard optimization
-customos build main.cos -O3  # Aggressive optimization
+boogpp build main.bpp -O0  # No optimization
+boogpp build main.bpp -O1  # Basic optimization
+boogpp build main.bpp -O2  # Standard optimization
+boogpp build main.bpp -O3  # Aggressive optimization
 ```
 
 ---
@@ -358,7 +358,7 @@ customos build main.cos -O3  # Aggressive optimization
 ## 11. Example Programs
 
 ### Registry Monitor
-```customos
+```boogpp
 @safety_level(mode: SAFE)
 import windows.registry
 import std.io
@@ -388,7 +388,7 @@ func main() -> i32:
 ```
 
 ### Process Monitor Service
-```customos
+```boogpp
 @safety_level(mode: SAFE)
 import windows.processes
 import std.io
@@ -419,8 +419,8 @@ func main() -> i32:
 ---
 
 ## 12. File Extension
-- Source files: `.cos`
-- Header files: `.cosh`
+- Source files: `.bpp`
+- Header files: `.bpph`
 - Compiled binaries: `.exe`, `.dll`, `.sys`
 
 ---
@@ -466,7 +466,7 @@ func main() -> i32:
 ---
 
 ## 15. Comments
-```customos
+```boogpp
 # Single line comment
 
 ###
@@ -477,4 +477,4 @@ block
 
 ---
 
-This specification provides the foundation for CustomOS. Implementation details and runtime behavior are defined in the compiler and runtime documentation.
+This specification provides the foundation for Boog++. Implementation details and runtime behavior are defined in the compiler and runtime documentation.

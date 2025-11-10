@@ -1,5 +1,5 @@
 """
-CustomOS Abstract Syntax Tree Node Definitions
+Boog++ Abstract Syntax Tree Node Definitions
 """
 
 from dataclasses import dataclass, field

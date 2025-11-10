@@ -1,5 +1,5 @@
 ###
-CustomOS Example 2: Registry Reader
+Boog++ Example 2: Registry Reader
 Demonstrates Windows registry access with try_chain resilience.
 ###
 

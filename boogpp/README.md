@@ -1,8 +1,8 @@
-# CustomOS Programming Language
+# Boog++ Programming Language
 
 **A Windows-centric systems programming language combining Python-like syntax with C++ performance.**
 
-CustomOS is designed specifically for Windows system customization, with deep OS integration, built-in safety mechanisms, and automatic resilience features.
+Boog++ is designed specifically for Windows system customization, with deep OS integration, built-in safety mechanisms, and automatic resilience features.
 
 ---
 
@@ -26,7 +26,7 @@ Three safety modes to balance security and flexibility:
 
 ### 🔄 Resilience & Error Handling
 
-```customos
+```boogpp
 return try_chain:
     primary:
         http.post(url, data)
@@ -58,20 +58,20 @@ Direct Windows API access without FFI boilerplate:
 
 ### Hello World
 
-```customos
+```boogpp
 @safety_level(mode: SAFE)
 module hello_world
 
 import std.io
 
 func main() -> i32:
-    std.io.println("Hello from CustomOS!")
+    std.io.println("Hello from Boog++!")
     return SUCCESS
 ```
 
 ### Registry Reader with Resilience
 
-```customos
+```boogpp
 @safety_level(mode: SAFE)
 import windows.registry
 
@@ -99,7 +99,7 @@ func main() -> i32:
 
 ### Process Monitor with Hooks
 
-```customos
+```boogpp
 @safety_level(mode: SAFE)
 import windows.processes
 import std.io
@@ -125,9 +125,9 @@ func main() -> i32:
 
 ### Windows Service
 
-```customos
+```boogpp
 @service(
-    name: "CustomOSService",
+    name: "Boog++Service",
     start_type: AUTO,
     run_as: SYSTEM
 )
@@ -148,12 +148,12 @@ func mainService() -> i32:
 - LLVM 14+ (for code generation)
 - Windows 10/11 (primary target)
 
-### Install CustomOS Compiler
+### Install Boog++ Compiler
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/customos.git
-cd customos
+git clone https://github.com/yourusername/boogpp.git
+cd boogpp
 
 # Install dependencies
 pip install -r requirements.txt
@@ -170,39 +170,39 @@ pip install -e .
 
 ```bash
 # Compile to executable
-customos build main.cos -o output.exe
+boogpp build main.bpp -o output.exe
 
 # Compile to DLL
-customos build library.cos --type dll -o library.dll
+boogpp build library.bpp --type dll -o library.dll
 
 # Compile to kernel driver
-customos build driver.cos --type driver -o driver.sys
+boogpp build driver.bpp --type driver -o driver.sys
 ```
 
 ### Safety Mode Override
 
 ```bash
 # Compile in UNSAFE mode
-customos build main.cos --safety unsafe -o output.exe
+boogpp build main.bpp --safety unsafe -o output.exe
 
 # Compile in CUSTOM mode
-customos build main.cos --safety custom -o output.exe
+boogpp build main.bpp --safety custom -o output.exe
 ```
 
 ### Optimization Levels
 
 ```bash
-customos build main.cos -O0  # No optimization
-customos build main.cos -O1  # Basic optimization
-customos build main.cos -O2  # Standard optimization (default)
-customos build main.cos -O3  # Aggressive optimization
+boogpp build main.bpp -O0  # No optimization
+boogpp build main.bpp -O1  # Basic optimization
+boogpp build main.bpp -O2  # Standard optimization (default)
+boogpp build main.bpp -O3  # Aggressive optimization
 ```
 
 ### Syntax Checking
 
 ```bash
 # Check syntax and safety without compiling
-customos check main.cos
+boogpp check main.bpp
 ```
 
 ---
@@ -228,7 +228,7 @@ customos check main.cos
 
 ### Variables
 
-```customos
+```boogpp
 let x: i32 = 42          # Immutable
 var y: string = "hello"  # Mutable
 
@@ -238,7 +238,7 @@ let z = 100              # Inferred as i32
 
 ### Functions
 
-```customos
+```boogpp
 func add(a: i32, b: i32) -> i32:
     return a + b
 
@@ -251,7 +251,7 @@ func noReturn() -> void:
 
 ### Control Flow
 
-```customos
+```boogpp
 # If statements
 if condition:
     doSomething()
@@ -280,7 +280,7 @@ match value:
 
 ### Decorators
 
-```customos
+```boogpp
 @hook(event: PROCESS_CREATION)
 @resilient(max_attempts: 3, timeout: 5000ms)
 @log_calls
@@ -311,24 +311,24 @@ See [Windows API Documentation](stdlib/windows/README.md) for complete API refer
 
 The `examples/` directory contains complete working examples:
 
-1. **01_hello_world.cos** - Basic syntax demonstration
-2. **02_registry_reader.cos** - Registry access with resilience
-3. **03_process_monitor.cos** - Process monitoring with hooks
-4. **04_system_service.cos** - Windows service creation
-5. **05_file_system_guard.cos** - File system protection
-6. **06_network_monitor.cos** - Network connection monitoring
-7. **07_registry_guard.cos** - Registry protection
-8. **08_advanced_resilience.cos** - Complex failover scenarios
+1. **01_hello_world.bpp** - Basic syntax demonstration
+2. **02_registry_reader.bpp** - Registry access with resilience
+3. **03_process_monitor.bpp** - Process monitoring with hooks
+4. **04_system_service.bpp** - Windows service creation
+5. **05_file_system_guard.bpp** - File system protection
+6. **06_network_monitor.bpp** - Network connection monitoring
+7. **07_registry_guard.bpp** - Registry protection
+8. **08_advanced_resilience.bpp** - Complex failover scenarios
 
 ### Running Examples
 
 ```bash
 # Compile and run an example
-customos build examples/01_hello_world.cos -o hello.exe
+boogpp build examples/01_hello_world.bpp -o hello.exe
 ./hello.exe
 
 # Check example syntax
-customos check examples/03_process_monitor.cos
+boogpp check examples/03_process_monitor.bpp
 ```
 
 ---
@@ -336,7 +336,7 @@ customos check examples/03_process_monitor.cos
 ## Project Structure
 
 ```
-customos/
+boogpp/
 ├── compiler/           # Compiler implementation
 │   ├── lexer/         # Lexical analyzer
 │   ├── parser/        # Parser and AST
@@ -375,7 +375,7 @@ customos/
 
 Full system access. Use with caution.
 
-```customos
+```boogpp
 @safety_level(mode: UNSAFE)
 module dangerous_app
 
@@ -389,7 +389,7 @@ func inject_dll(pid: u32, dll_path: string) -> i32:
 
 Define your own safety rules:
 
-```customos
+```boogpp
 @safety_level(mode: CUSTOM)
 @allow_operations(["registry.write", "processes.kill"])
 module custom_safety
@@ -443,8 +443,8 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for gu
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/customos.git
-cd customos
+git clone https://github.com/yourusername/boogpp.git
+cd boogpp
 
 # Create virtual environment
 python -m venv venv
@@ -457,7 +457,7 @@ pip install -r requirements-dev.txt
 pytest tests/
 
 # Run linter
-pylint customos/compiler/
+pylint boogpp/compiler/
 ```
 
 ---
@@ -486,9 +486,9 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ## Contact
 
-- Issues: https://github.com/yourusername/customos/issues
-- Discussions: https://github.com/yourusername/customos/discussions
+- Issues: https://github.com/yourusername/boogpp/issues
+- Discussions: https://github.com/yourusername/boogpp/discussions
 
 ---
 
-**CustomOS** - Write Windows system tools with Python-like simplicity and C++ performance.
+**Boog++** - Write Windows system tools with Python-like simplicity and C++ performance.

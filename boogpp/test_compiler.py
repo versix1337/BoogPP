@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script to verify CustomOS compiler functionality.
+Test script to verify Boog++ compiler functionality.
 """
 
 import sys
@@ -30,7 +30,7 @@ func main() -> i32:
 """
 
     try:
-        tokens = tokenize(source, "test.cos")
+        tokens = tokenize(source, "test.bpp")
         print(f"  ✓ Lexer generated {len(tokens)} tokens")
         return True
     except LexerError as e:
@@ -58,7 +58,7 @@ func main() -> i32:
 """
 
     try:
-        tokens = tokenize(source, "test.cos")
+        tokens = tokenize(source, "test.bpp")
         ast = parse(tokens)
         print(f"  ✓ Parser generated AST successfully")
         print(f"    - Module: {ast.module_decl.name if ast.module_decl else 'None'}")
@@ -100,7 +100,7 @@ func main() -> i32:
 
     try:
         # Test safe code
-        tokens = tokenize(safe_code, "safe.cos")
+        tokens = tokenize(safe_code, "safe.bpp")
         ast = parse(tokens)
         violations = check_safety(ast, SafetyMode.SAFE)
         errors = [v for v in violations if v.severity == "error"]
@@ -112,7 +112,7 @@ func main() -> i32:
         print(f"  ✓ Safe code passed safety checks")
 
         # Test unsafe code
-        tokens = tokenize(unsafe_code, "unsafe.cos")
+        tokens = tokenize(unsafe_code, "unsafe.bpp")
         ast = parse(tokens)
         violations = check_safety(ast, SafetyMode.SAFE)
         errors = [v for v in violations if v.severity == "error"]
@@ -133,7 +133,7 @@ def test_example_file():
     """Test compiling an example file"""
     print("Testing Example File Compilation...")
 
-    example_file = Path(__file__).parent / "examples" / "01_hello_world.cos"
+    example_file = Path(__file__).parent / "examples" / "01_hello_world.bpp"
 
     if not example_file.exists():
         print(f"  ⚠ Example file not found: {example_file}")
@@ -170,7 +170,7 @@ def test_example_file():
 def main():
     """Run all tests"""
     print("=" * 60)
-    print("CustomOS Compiler Test Suite")
+    print("Boog++ Compiler Test Suite")
     print("=" * 60)
     print()
 

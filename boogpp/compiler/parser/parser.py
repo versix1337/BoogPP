@@ -1,5 +1,5 @@
 """
-CustomOS Parser
+Boog++ Parser
 Builds an Abstract Syntax Tree from tokens.
 """
 
@@ -17,7 +17,7 @@ class ParseError(Exception):
 
 
 class Parser:
-    """Parses CustomOS tokens into an AST"""
+    """Parses Boog++ tokens into an AST"""
 
     def __init__(self, tokens: List[Token]):
         self.tokens = tokens

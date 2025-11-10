@@ -1,6 +1,6 @@
 """
-CustomOS Lexer
-Tokenizes CustomOS source code with support for whitespace-based indentation.
+Boog++ Lexer
+Tokenizes Boog++ source code with support for whitespace-based indentation.
 """
 
 from typing import List, Optional
@@ -19,7 +19,7 @@ class LexerError(Exception):
 
 
 class Lexer:
-    """Tokenizes CustomOS source code"""
+    """Tokenizes Boog++ source code"""
 
     def __init__(self, source: str, filename: Optional[str] = None):
         self.source = source

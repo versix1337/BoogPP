@@ -1,5 +1,5 @@
 """
-CustomOS Safety System Module
+Boog++ Safety System Module
 """
 
 from .safety_checker import SafetyChecker, SafetyMode, SafetyLevel, SafetyViolation, check_safety

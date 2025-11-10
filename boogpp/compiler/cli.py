@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-CustomOS Compiler CLI
-Command-line interface for the CustomOS compiler.
+Boog++ Compiler CLI
+Command-line interface for the Boog++ compiler.
 """
 
 import sys
@@ -19,8 +19,8 @@ class CompilerError(Exception):
     pass
 
 
-class CustomOSCompiler:
-    """CustomOS compiler"""
+class Boog++Compiler:
+    """Boog++ compiler"""
 
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
@@ -28,7 +28,7 @@ class CustomOSCompiler:
     def log(self, message: str) -> None:
         """Log message if verbose mode is enabled"""
         if self.verbose:
-            print(f"[CustomOS] {message}")
+            print(f"[Boog++] {message}")
 
     def compile_file(
         self,
@@ -38,7 +38,7 @@ class CustomOSCompiler:
         optimization_level: int = 0,
         output_type: str = "exe"
     ) -> bool:
-        """Compile a CustomOS source file"""
+        """Compile a Boog++ source file"""
 
         self.log(f"Compiling {input_file}...")
 
@@ -124,15 +124,15 @@ class CustomOSCompiler:
 def main():
     """Main CLI entry point"""
     parser = argparse.ArgumentParser(
-        description="CustomOS Compiler - Windows-centric systems programming language",
+        description="Boog++ Compiler - Windows-centric systems programming language",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  customos build main.cos                     # Compile to main.exe
-  customos build main.cos -o myapp.exe        # Compile with custom output name
-  customos build service.cos --type service   # Compile as Windows service
-  customos build driver.cos --type driver     # Compile as kernel driver
-  customos build app.cos --safety unsafe -O3  # Compile with UNSAFE mode and O3 optimization
+  boogpp build main.cos                     # Compile to main.exe
+  boogpp build main.cos -o myapp.exe        # Compile with custom output name
+  boogpp build service.cos --type service   # Compile as Windows service
+  boogpp build driver.cos --type driver     # Compile as kernel driver
+  boogpp build app.cos --safety unsafe -O3  # Compile with UNSAFE mode and O3 optimization
 
 Output types:
   exe     - Executable (default)
@@ -145,7 +145,7 @@ Output types:
     subparsers = parser.add_subparsers(dest='command', help='Commands')
 
     # Build command
-    build_parser = subparsers.add_parser('build', help='Compile a CustomOS source file')
+    build_parser = subparsers.add_parser('build', help='Compile a Boog++ source file')
     build_parser.add_argument('input', type=str, help='Input source file (.cos)')
     build_parser.add_argument('-o', '--output', type=str, help='Output file name')
     build_parser.add_argument('--type', choices=['exe', 'dll', 'service', 'driver'],
@@ -170,7 +170,7 @@ Output types:
     args = parser.parse_args()
 
     if args.command == 'version':
-        print("CustomOS Compiler v1.0.0")
+        print("Boog++ Compiler v1.0.0")
         print("A Windows-centric systems programming language")
         return 0
 
@@ -181,7 +181,7 @@ Output types:
         # Convert safety mode string to enum
         safety_mode = SafetyMode[args.safety.upper()]
 
-        compiler = CustomOSCompiler(verbose=args.verbose)
+        compiler = Boog++Compiler(verbose=args.verbose)
         success = compiler.compile_file(
             input_file,
             output_file,
@@ -196,7 +196,7 @@ Output types:
         input_file = Path(args.input)
         safety_mode = SafetyMode[args.safety.upper()]
 
-        compiler = CustomOSCompiler(verbose=args.verbose)
+        compiler = Boog++Compiler(verbose=args.verbose)
 
         # Read and parse file
         try:

@@ -1,5 +1,5 @@
 ###
-CustomOS Example 4: Windows Service
+Boog++ Example 4: Windows Service
 Demonstrates creating a Windows service with automatic restart.
 ###
 
@@ -33,14 +33,14 @@ func perform_health_check() -> void:
         std.io.log("WARNING: Health check failed")
 
 @service(
-    name: "CustomOSHealthMonitor",
-    display_name: "CustomOS Health Monitor",
+    name: "Boog++HealthMonitor",
+    display_name: "Boog++ Health Monitor",
     description: "Monitors system health and logs status",
     start_type: AUTO,
     run_as: SYSTEM
 )
 func main_service() -> i32:
-    std.io.log("CustomOS Health Monitor Service starting...")
+    std.io.log("Boog++ Health Monitor Service starting...")
 
     while service_running and isRunning():
         # Perform health check every 30 seconds
@@ -49,7 +49,7 @@ func main_service() -> i32:
         # Sleep for 30 seconds
         sleep(30000)
 
-    std.io.log("CustomOS Health Monitor Service stopping...")
+    std.io.log("Boog++ Health Monitor Service stopping...")
     return SUCCESS
 
 func main() -> i32:

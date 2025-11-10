@@ -1,5 +1,5 @@
 """
-CustomOS Safety System
+Boog++ Safety System
 Enforces safety rules based on mode (SAFE, UNSAFE, CUSTOM).
 """
 
