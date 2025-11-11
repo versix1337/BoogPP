@@ -8,7 +8,6 @@ module advanced_resilience
 
 import windows.registry
 import windows.network
-import std.io
 import std.time
 import std.fs
 
@@ -30,7 +29,7 @@ func fetch_config() -> (i32, ConfigData):
             get_default_config()
 
 func fetch_config_from_registry() -> (i32, ConfigData):
-    std.io.log("Attempting to fetch config from registry...")
+    log("Attempting to fetch config from registry...")
 
     status1, api_url = windows.registry.read("HKLM\\Software\\MyApp", "ApiUrl")
     status2, api_key = windows.registry.read("HKLM\\Software\\MyApp", "ApiKey")
@@ -42,13 +41,13 @@ func fetch_config_from_registry() -> (i32, ConfigData):
             timeout: 5000,
             retry_count: 3
         )
-        std.io.log("Config loaded from registry")
+        log("Config loaded from registry")
         return (SUCCESS, config)
 
     return (GENERIC_ERROR, ConfigData())
 
 func fetch_config_from_file() -> (i32, ConfigData):
-    std.io.log("Attempting to fetch config from file...")
+    log("Attempting to fetch config from file...")
 
     let config_path = "C:\\ProgramData\\MyApp\\config.json"
 
@@ -62,13 +61,13 @@ func fetch_config_from_file() -> (i32, ConfigData):
             timeout: 5000,
             retry_count: 3
         )
-        std.io.log("Config loaded from file")
+        log("Config loaded from file")
         return (SUCCESS, config)
 
     return (GENERIC_ERROR, ConfigData())
 
 func get_default_config() -> (i32, ConfigData):
-    std.io.log("Using default configuration")
+    log("Using default configuration")
 
     let config = ConfigData(
         api_url: "https://default.example.com",
@@ -90,35 +89,36 @@ func fetch_remote_data(url: string) -> (i32, string):
             (SUCCESS, "CACHED_DATA")
 
 func process_with_resilience() -> void:
-    std.io.println("Starting resilient data processing...")
+    println("Starting resilient data processing...")
 
     # Fetch configuration with automatic failover
     status, config = fetch_config()
 
     if status != SUCCESS:
-        std.io.println("ERROR: Could not fetch configuration")
+        println("ERROR: Could not fetch configuration")
         return
 
-    std.io.println("Configuration loaded successfully:")
-    std.io.println("  API URL: " + config.api_url)
-    std.io.println("  Timeout: " + string(config.timeout) + "ms")
-    std.io.println("  Retry Count: " + string(config.retry_count))
-    std.io.println("")
+    println("Configuration loaded successfully:")
+    println("  API URL: " + config.api_url)
+    println("  Timeout: " + string(config.timeout) + "ms")
+    println("  Retry Count: " + string(config.retry_count))
+    println("")
 
     # Fetch remote data with resilience
-    std.io.println("Fetching remote data...")
+    println("Fetching remote data...")
     status2, data = fetch_remote_data(config.api_url)
 
     if status2 == SUCCESS:
-        std.io.println("Data fetched successfully: " + data)
+        println("Data fetched successfully: " + data)
     else:
-        std.io.println("Failed to fetch data after all retries")
+        println("Failed to fetch data after all retries")
 
 func main() -> i32:
-    std.io.println("Advanced Resilience Demo")
-    std.io.println("=" * 50)
-    std.io.println("")
+    println("Advanced Resilience Demo")
+    println("=" * 50)
+    println("")
 
     process_with_resilience()
-
+    println("\nPress Enter to exit...")
+    read_line()
     return SUCCESS
