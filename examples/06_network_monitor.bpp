@@ -8,7 +8,6 @@ module network_monitor
 
 import windows.network
 import windows.processes
-import std.io
 import std.time
 
 var blocked_ips: array[string, 10] = [
@@ -46,29 +45,29 @@ func onNetworkConnection(pid: u32, remote_addr: string, remote_port: u16, protoc
 
     # Log connection
     let message = "[" + timestamp + "] Connection: " + proc_name + " (PID " + string(pid) + ") -> " + remote_addr + ":" + string(remote_port) + " (" + protocol + ")"
-    std.io.log(message)
+    log(message)
 
     # Check if connection should be blocked
     if is_blocked_connection(remote_addr, remote_port):
-        std.io.log("SECURITY: Blocked connection to " + remote_addr + ":" + string(remote_port))
+        log("SECURITY: Blocked connection to " + remote_addr + ":" + string(remote_port))
         return BLOCK_CONNECTION
 
     return ALLOW_CONNECTION
 
 func display_active_connections() -> void:
-    std.io.println("Active Network Connections:")
-    std.io.println("=" * 70)
+    println("Active Network Connections:")
+    println("=" * 70)
 
     status, connections = windows.network.get_connections()
 
     if status == SUCCESS:
         for conn in connections:
-            std.io.println(conn.local_addr + ":" + string(conn.local_port) + " -> " + conn.remote_addr + ":" + string(conn.remote_port) + " [" + conn.state + "]")
+            println(conn.local_addr + ":" + string(conn.local_port) + " -> " + conn.remote_addr + ":" + string(conn.remote_port) + " [" + conn.state + "]")
 
 func main() -> i32:
-    std.io.println("Network Monitor Active")
-    std.io.println("")
-    std.io.println("Blocked IPs:")
+    println("Network Monitor Active")
+    println("")
+    println("Blocked IPs:")
     for ip in blocked_ips:
         if ip != "":
             std.io.println("  - " + ip)
@@ -84,8 +83,8 @@ func main() -> i32:
     # Display current connections
     display_active_connections()
 
-    std.io.println("")
-    std.io.println("Monitoring network connections... Press Ctrl+C to exit")
+    println("")
+    println("Monitoring network connections... Press Ctrl+C to exit")
 
     while true:
         sleep(5000)  # Update every 5 seconds

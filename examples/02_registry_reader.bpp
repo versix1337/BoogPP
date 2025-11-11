@@ -7,7 +7,6 @@ Demonstrates Windows registry access with try_chain resilience.
 module registry_reader
 
 import windows.registry
-import std.io
 
 @resilient(max_attempts: 3, timeout: 2000ms)
 func readRegistryKey(key: string, value: string) -> (i32, string):
@@ -20,7 +19,7 @@ func readRegistryKey(key: string, value: string) -> (i32, string):
             (GENERIC_ERROR, "")
 
 func main() -> i32:
-    std.io.println("Reading Windows Registry...")
+    println("Reading Windows Registry...")
 
     # Read Windows version
     status, version = readRegistryKey(
@@ -29,9 +28,9 @@ func main() -> i32:
     )
 
     if status == SUCCESS:
-        std.io.println("Windows Version: " + version)
+        println("Windows Version: " + version)
     else:
-        std.io.println("Failed to read registry")
+        println("Failed to read registry")
 
     # Read current user
     status, username = readRegistryKey(
@@ -40,6 +39,8 @@ func main() -> i32:
     )
 
     if status == SUCCESS:
-        std.io.println("Current User: " + username)
+        println("Current User: " + username)
 
+    println("\nPress Enter to exit...")
+    read_line()
     return SUCCESS

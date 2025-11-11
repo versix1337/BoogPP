@@ -8,7 +8,6 @@ module system_service
 
 import windows.registry
 import windows.services
-import std.io
 import std.time
 
 var service_running: bool = true
@@ -28,9 +27,9 @@ func perform_health_check() -> void:
     status, health = check_system_health()
 
     if status == SUCCESS:
-        std.io.log("System health check: " + health)
+        log("System health check: " + health)
     else:
-        std.io.log("WARNING: Health check failed")
+        log("WARNING: Health check failed")
 
 @service(
     name: "BoogppHealthMonitor",
@@ -40,7 +39,7 @@ func perform_health_check() -> void:
     run_as: SYSTEM
 )
 func main_service() -> i32:
-    std.io.log("Boogpp Health Monitor Service starting...")
+    log("Boogpp Health Monitor Service starting...")
 
     while service_running and isRunning():
         # Perform health check every 30 seconds
@@ -49,7 +48,7 @@ func main_service() -> i32:
         # Sleep for 30 seconds
         sleep(30000)
 
-    std.io.log("Boogpp Health Monitor Service stopping...")
+    log("Boogpp Health Monitor Service stopping...")
     return SUCCESS
 
 func main() -> i32:

@@ -8,7 +8,6 @@ module registry_guard
 
 import windows.registry
 import windows.processes
-import std.io
 import std.time
 
 var protected_keys: array[string, 10] = [
@@ -48,17 +47,17 @@ func onRegistryWrite(key: string, value: string, data: string, pid: u32) -> i32:
     let proc_name = if status == SUCCESS: proc_info.name else: "Unknown"
 
     # Log all registry writes
-    std.io.log("[" + timestamp + "] Registry Write: " + key + "\\" + value + " = " + data + " by " + proc_name + " (PID " + string(pid) + ")")
+    log("[" + timestamp + "] Registry Write: " + key + "\\" + value + " = " + data + " by " + proc_name + " (PID " + string(pid) + ")")
 
     # Check if writing to protected key
     if is_protected_key(key):
         # Allow if process is whitelisted
         if is_whitelisted_process(pid):
-            std.io.log("ALLOWED: Whitelisted process")
+            log("ALLOWED: Whitelisted process")
             return ALLOW_OPERATION
 
         # Block unauthorized writes
-        std.io.log("BLOCKED: Unauthorized write to protected registry key")
+        log("BLOCKED: Unauthorized write to protected registry key")
         return BLOCK_OPERATION
 
     return ALLOW_OPERATION
@@ -71,18 +70,18 @@ func onRegistryDelete(key: string, value: string, pid: u32) -> i32:
     status, proc_info = windows.processes.get_info(pid)
     let proc_name = if status == SUCCESS: proc_info.name else: "Unknown"
 
-    std.io.log("[" + timestamp + "] Registry Delete: " + key + "\\" + value + " by " + proc_name + " (PID " + string(pid) + ")")
+    log("[" + timestamp + "] Registry Delete: " + key + "\\" + value + " by " + proc_name + " (PID " + string(pid) + ")")
 
     # Block deletion of protected keys
     if is_protected_key(key):
-        std.io.log("BLOCKED: Cannot delete protected registry key")
+        log("BLOCKED: Cannot delete protected registry key")
         return BLOCK_OPERATION
 
     return ALLOW_OPERATION
 
 func monitor_autorun_keys() -> void:
-    std.io.println("Monitoring AutoRun Registry Keys:")
-    std.io.println("=" * 70)
+    println("Monitoring AutoRun Registry Keys:")
+    println("=" * 70)
 
     let autorun_keys = [
         "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
@@ -93,27 +92,27 @@ func monitor_autorun_keys() -> void:
         status, values = windows.registry.enumerate_values(key)
 
         if status == SUCCESS:
-            std.io.println("  " + key + ":")
+            println("  " + key + ":")
             for value in values:
                 status2, data = windows.registry.read(key, value)
                 if status2 == SUCCESS:
-                    std.io.println("    " + value + " = " + data)
+                    println("    " + value + " = " + data)
 
 func main() -> i32:
-    std.io.println("Registry Guard Active")
-    std.io.println("")
-    std.io.println("Protected Registry Keys:")
+    println("Registry Guard Active")
+    println("")
+    println("Protected Registry Keys:")
     for key in protected_keys:
         if key != "":
-            std.io.println("  - " + key)
+            println("  - " + key)
 
-    std.io.println("")
+    println("")
 
     # Show current autorun entries
     monitor_autorun_keys()
 
-    std.io.println("")
-    std.io.println("Monitoring registry changes... Press Ctrl+C to exit")
+    println("")
+    println("Monitoring registry changes... Press Ctrl+C to exit")
 
     while true:
         sleep(1000)
