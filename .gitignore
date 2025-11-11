@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+env/
+venv/
+.pytest_cache/
+
+# Build artifacts
+*.obj
+*.o
+*.exe
+*.dll
+*.sys
+*.lib
+*.exp
+*.ilk
+*.pdb
+*.ll
+
+# Runtime build outputs
+runtime/build/
+runtime/lib/
+
+# Tools and installers (do not commit large binaries)
+tools/llvm/
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store

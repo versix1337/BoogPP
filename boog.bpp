@@ -1,0 +1,14 @@
+###
+Boogpp Example 1: Hello World
+Demonstrates basic syntax and function declaration.
+###
+
+@safety_level(mode: SAFE)
+module hello_world
+
+import std.io
+
+func main() -> i32:
+    std.io.println("Hello from Boogpp!")
+    std.io.println("A Windows-focused systems programming language")
+    return SUCCESS

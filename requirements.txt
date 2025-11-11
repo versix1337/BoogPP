@@ -1,0 +1,17 @@
+# === BoogPP Compiler Runtime Requirements ===
+
+# Console output formatting
+colorama>=0.4.6
+rich>=13.7.0
+
+# LLVM backend for code generation
+llvmlite>=0.43.0
+
+# pathlib is built into Python 3.4+
+# Kept out of requirements to avoid unnecessary backport on 3.8+
+
+# Optional: if using YAML-based configuration or tokens
+pyyaml>=6.0.1
+
+# Optional: if it includes command-line parsing helpers
+click>=8.1.7

@@ -1,0 +1,93 @@
+###
+Boogpp Example 6: Network Monitor
+Demonstrates network connection monitoring and filtering.
+###
+
+@safety_level(mode: SAFE)
+module network_monitor
+
+import windows.network
+import windows.processes
+import std.io
+import std.time
+
+var blocked_ips: array[string, 10] = [
+    "192.168.1.100",
+    "10.0.0.50",
+    "malicious-site.com"
+]
+
+var blocked_ports: array[u16, 5] = [
+    4444,  # Common backdoor port
+    6666,  # IRC bot
+    31337  # Elite/leet backdoor
+]
+
+func is_blocked_connection(addr: string, port: u16) -> bool:
+    # Check blocked IPs
+    for blocked_ip in blocked_ips:
+        if addr == blocked_ip:
+            return true
+
+    # Check blocked ports
+    for blocked_port in blocked_ports:
+        if port == blocked_port:
+            return true
+
+    return false
+
+@hook(event: NETWORK_CONNECTION)
+func onNetworkConnection(pid: u32, remote_addr: string, remote_port: u16, protocol: string) -> i32:
+    let timestamp = std.time.now()
+
+    # Get process info
+    status, proc_info = windows.processes.get_info(pid)
+    let proc_name = if status == SUCCESS: proc_info.name else: "Unknown"
+
+    # Log connection
+    let message = "[" + timestamp + "] Connection: " + proc_name + " (PID " + string(pid) + ") -> " + remote_addr + ":" + string(remote_port) + " (" + protocol + ")"
+    std.io.log(message)
+
+    # Check if connection should be blocked
+    if is_blocked_connection(remote_addr, remote_port):
+        std.io.log("SECURITY: Blocked connection to " + remote_addr + ":" + string(remote_port))
+        return BLOCK_CONNECTION
+
+    return ALLOW_CONNECTION
+
+func display_active_connections() -> void:
+    std.io.println("Active Network Connections:")
+    std.io.println("=" * 70)
+
+    status, connections = windows.network.get_connections()
+
+    if status == SUCCESS:
+        for conn in connections:
+            std.io.println(conn.local_addr + ":" + string(conn.local_port) + " -> " + conn.remote_addr + ":" + string(conn.remote_port) + " [" + conn.state + "]")
+
+func main() -> i32:
+    std.io.println("Network Monitor Active")
+    std.io.println("")
+    std.io.println("Blocked IPs:")
+    for ip in blocked_ips:
+        if ip != "":
+            std.io.println("  - " + ip)
+
+    std.io.println("")
+    std.io.println("Blocked Ports:")
+    for port in blocked_ports:
+        if port != 0:
+            std.io.println("  - " + string(port))
+
+    std.io.println("")
+
+    # Display current connections
+    display_active_connections()
+
+    std.io.println("")
+    std.io.println("Monitoring network connections... Press Ctrl+C to exit")
+
+    while true:
+        sleep(5000)  # Update every 5 seconds
+
+    return SUCCESS

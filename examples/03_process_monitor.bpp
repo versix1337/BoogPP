@@ -1,0 +1,70 @@
+###
+Boogpp Example 3: Process Monitor
+Demonstrates process hooks and monitoring with logging.
+###
+
+@safety_level(mode: SAFE)
+module process_monitor
+
+import windows.processes
+import std.io
+import std.time
+
+var blocked_processes: array[string, 10] = [
+    "malware.exe",
+    "suspicious.exe",
+    "badtool.exe"
+]
+
+func is_blocked(exe_name: string) -> bool:
+    for blocked in blocked_processes:
+        if blocked in exe_name.lower():
+            return true
+    return false
+
+@hook(event: PROCESS_CREATION)
+func onProcessCreated(pid: u32, exe_path: string) -> i32:
+    let timestamp = std.time.now()
+    let message = "[" + timestamp + "] Process started: " + exe_path + " (PID: " + string(pid) + ")"
+
+    std.io.log(message)
+
+    # Check if process should be blocked
+    if is_blocked(exe_path):
+        std.io.log("SECURITY: Blocked suspicious process: " + exe_path)
+        return BLOCK_PROCESS
+
+    return ALLOW_PROCESS
+
+@hook(event: PROCESS_TERMINATION)
+func onProcessTerminated(pid: u32, exit_code: i32) -> void:
+    let timestamp = std.time.now()
+    let message = "[" + timestamp + "] Process terminated: PID " + string(pid) + " with exit code " + string(exit_code)
+    std.io.log(message)
+
+func list_running_processes() -> void:
+    std.io.println("Current Running Processes:")
+    std.io.println("=" * 50)
+
+    status, processes = windows.processes.enumerate()
+
+    if status == SUCCESS:
+        for proc in processes:
+            std.io.println("PID: " + string(proc.pid) + " - " + proc.name)
+
+func main() -> i32:
+    std.io.println("Process Monitor Started")
+    std.io.println("Monitoring all process creation and termination events")
+    std.io.println("")
+
+    # List currently running processes
+    list_running_processes()
+
+    std.io.println("")
+    std.io.println("Monitoring active... Press Ctrl+C to exit")
+
+    # Keep running to monitor processes
+    while true:
+        sleep(1000)  # Sleep 1 second
+
+    return SUCCESS
