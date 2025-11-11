@@ -9,6 +9,8 @@ import argparse
 from pathlib import Path
 from typing import Optional
 
+from .. import __version__
+
 from .lexer import tokenize, LexerError
 from .parser import parse, ParseError
 from .safety import check_safety, SafetyMode, SafetyViolation
@@ -199,7 +201,7 @@ Output types:
     args = parser.parse_args()
 
     if args.command == 'version':
-        print("Boogpp Compiler v1.0.0")
+        print(f"Boogpp Compiler v{__version__}")
         print("A Windows-centric systems programming language")
         return 0
 

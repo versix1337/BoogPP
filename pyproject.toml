@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "boogpp"
+version = "3.0.0"
+description = "Boogpp Programming Language compiler and runtime"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Boogpp Development Team"}
+]
+keywords = ["systems", "compiler", "language", "windows", "llvm"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+[project.urls]
+Homepage = "https://github.com/versix1337/BoogPP"
+Documentation = "https://github.com/versix1337/BoogPP"
+Repository = "https://github.com/versix1337/BoogPP"
+
+[project.scripts]
+boogpp = "boogpp.compiler.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["boogpp*" ]
