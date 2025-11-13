@@ -1,0 +1,255 @@
+{
+  "name": "BoogPP",
+  "scopeName": "source.boogpp",
+  "fileTypes": ["bpp"],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#decorators"
+    },
+    {
+      "include": "#functions"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#constants"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.boogpp",
+          "match": "#.*$"
+        },
+        {
+          "name": "comment.block.boogpp",
+          "begin": "###",
+          "end": "###"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.boogpp",
+          "match": "\\b(if|elif|else|while|for|in|match|break|continue|return|defer|pass)\\b"
+        },
+        {
+          "name": "keyword.declaration.boogpp",
+          "match": "\\b(func|struct|enum|trait|impl|module|import|from)\\b"
+        },
+        {
+          "name": "keyword.other.boogpp",
+          "match": "\\b(let|var|const|unsafe|safe|try_chain|or)\\b"
+        },
+        {
+          "name": "storage.modifier.boogpp",
+          "match": "\\b(pub|priv|mut)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.boogpp",
+          "match": "\\b(i8|i16|i32|i64|u8|u16|u32|u64|f32|f64|bool|char|string|void|status|handle|ptr|array|slice|tuple|result)\\b"
+        }
+      ]
+    },
+    "decorators": {
+      "patterns": [
+        {
+          "name": "meta.decorator.boogpp",
+          "begin": "@",
+          "end": "(?=\\n|:)",
+          "patterns": [
+            {
+              "name": "entity.name.function.decorator.boogpp",
+              "match": "[a-zA-Z_][a-zA-Z0-9_]*"
+            },
+            {
+              "include": "#decorator-args"
+            }
+          ]
+        }
+      ]
+    },
+    "decorator-args": {
+      "patterns": [
+        {
+          "begin": "\\(",
+          "end": "\\)",
+          "patterns": [
+            {
+              "include": "#strings"
+            },
+            {
+              "include": "#numbers"
+            },
+            {
+              "name": "variable.parameter.boogpp",
+              "match": "[a-zA-Z_][a-zA-Z0-9_]*"
+            }
+          ]
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.boogpp",
+          "match": "\\b(func)\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\b",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.boogpp"
+            },
+            "2": {
+              "name": "entity.name.function.boogpp"
+            }
+          }
+        },
+        {
+          "name": "meta.function.call.boogpp",
+          "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.boogpp"
+            }
+          }
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.boogpp",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.boogpp",
+              "match": "\\\\."
+            },
+            {
+              "name": "constant.character.format.boogpp",
+              "match": "\\{[^}]*\\}"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.boogpp",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.boogpp",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.triple.boogpp",
+          "begin": "f\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.boogpp",
+              "match": "\\\\."
+            },
+            {
+              "name": "meta.embedded.boogpp",
+              "begin": "\\{",
+              "end": "\\}",
+              "patterns": [
+                {
+                  "include": "$self"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.hex.boogpp",
+          "match": "\\b0[xX][0-9a-fA-F]+\\b"
+        },
+        {
+          "name": "constant.numeric.binary.boogpp",
+          "match": "\\b0[bB][01]+\\b"
+        },
+        {
+          "name": "constant.numeric.octal.boogpp",
+          "match": "\\b0[oO][0-7]+\\b"
+        },
+        {
+          "name": "constant.numeric.float.boogpp",
+          "match": "\\b[0-9]+\\.[0-9]+([eE][+-]?[0-9]+)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.boogpp",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.arithmetic.boogpp",
+          "match": "\\+|\\-|\\*|\\/|%"
+        },
+        {
+          "name": "keyword.operator.comparison.boogpp",
+          "match": "==|!=|<|>|<=|>="
+        },
+        {
+          "name": "keyword.operator.logical.boogpp",
+          "match": "\\b(and|or|not)\\b"
+        },
+        {
+          "name": "keyword.operator.bitwise.boogpp",
+          "match": "&|\\||\\^|~|<<|>>"
+        },
+        {
+          "name": "keyword.operator.assignment.boogpp",
+          "match": "=|\\+=|\\-=|\\*=|\\/=|%=|&=|\\|=|\\^=|<<=|>>="
+        },
+        {
+          "name": "keyword.operator.pointer.boogpp",
+          "match": "->|\\*|&"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.boogpp",
+          "match": "\\b(true|false|null|SUCCESS|GENERIC_ERROR|ACCESS_DENIED|TIMEOUT|NOT_FOUND|INVALID_PARAMETER|OUT_OF_MEMORY)\\b"
+        },
+        {
+          "name": "constant.language.safety.boogpp",
+          "match": "\\b(SAFE|UNSAFE|CUSTOM)\\b"
+        }
+      ]
+    }
+  }
+}

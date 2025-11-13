@@ -1,0 +1,247 @@
+###
+Kernel Driver Manager
+Load and communicate with Windows kernel drivers
+###
+
+@safety_level(mode: UNSAFE)
+module kernel_driver_manager
+
+import windows.driver
+import windows.token
+import std.io
+import std.fs
+
+func load_driver(driver_path: string, service_name: string) -> status:
+    """Load a kernel driver"""
+
+    println(f"Loading driver: {driver_path}")
+    println(f"Service name: {service_name}")
+
+    # Enable load driver privilege
+    let priv_result = windows.token.enable_privilege(windows.token.PRIVILEGE_LOAD_DRIVER)
+
+    if priv_result != SUCCESS:
+        println("Failed to enable load driver privilege")
+        println("Administrator access required!")
+        return priv_result
+
+    # Load the driver
+    let result = try_chain {
+        windows.driver.load(driver_path, service_name)
+    } or {
+        # Retry with delay
+        sleep(1000)
+        windows.driver.load(driver_path, service_name)
+    } else {
+        println("Failed to load driver after retries")
+        return GENERIC_ERROR
+    }
+
+    if result == SUCCESS:
+        println("Driver loaded successfully")
+    else:
+        println(f"Driver load failed: {result}")
+
+    return result
+
+func unload_driver(service_name: string) -> status:
+    """Unload a kernel driver"""
+
+    println(f"Unloading driver: {service_name}")
+
+    let result = windows.driver.unload(service_name)
+
+    if result == SUCCESS:
+        println("Driver unloaded successfully")
+    else:
+        println(f"Driver unload failed: {result}")
+
+    return result
+
+func send_ioctl(device_name: string, ioctl_code: u32,
+                input_data: array[u8], output_buffer: ptr[u8], output_size: u64) -> status:
+    """Send IOCTL to driver"""
+
+    println(f"Sending IOCTL 0x{ioctl_code:X} to {device_name}")
+
+    bytes_returned: u64
+    let result = windows.driver.ioctl(device_name, ioctl_code,
+                                     input_data.data, input_data.length,
+                                     output_buffer, output_size,
+                                     &bytes_returned)
+
+    if result == SUCCESS:
+        println(f"IOCTL succeeded, {bytes_returned} bytes returned")
+    else:
+        println(f"IOCTL failed: {result}")
+
+    return result
+
+func driver_communication_demo() -> status:
+    """Demonstrate driver communication"""
+
+    # Define IOCTL codes
+    const IOCTL_GET_VERSION: u32 = 0x222000
+    const IOCTL_READ_MEMORY: u32 = 0x222004
+    const IOCTL_WRITE_MEMORY: u32 = 0x222008
+
+    device_name: string = "\\\\.\\BoogppDriver"
+
+    # Get driver version
+    version_buffer: array[u8, 16]
+    send_ioctl(device_name, IOCTL_GET_VERSION, [], version_buffer.data, 16)
+
+    println(f"Driver version: {version_buffer}")
+
+    # Read physical memory (example)
+    struct read_request:
+        address: u64
+        size: u32
+
+    request: read_request
+    request.address = 0x1000
+    request.size = 256
+
+    input_data: array[u8, 12]
+    memcpy(input_data.data, &request, 12)
+
+    memory_buffer: array[u8, 256]
+    send_ioctl(device_name, IOCTL_READ_MEMORY, input_data, memory_buffer.data, 256)
+
+    return SUCCESS
+
+@resilient(max_retries: 5, timeout: 10000)
+func wait_for_driver(service_name: string) -> status:
+    """Wait for driver to be ready"""
+
+    println(f"Waiting for driver {service_name} to be ready...")
+
+    # Check service status
+    state: windows.service.SERVICE_STATE
+    let result = windows.service.get_state(service_name, &state)
+
+    if result != SUCCESS:
+        return result
+
+    if state == windows.service.RUNNING:
+        println("Driver is ready")
+        return SUCCESS
+
+    sleep(1000)
+    return TIMEOUT  # Trigger retry
+
+func create_driver_package(source_sys: string, output_dir: string) -> status:
+    """Create a deployable driver package"""
+
+    println(f"Creating driver package from {source_sys}")
+
+    # Create output directory
+    std.fs.create_directory(output_dir)
+
+    # Copy driver file
+    driver_dest: string = output_dir + "\\driver.sys"
+    std.fs.copy(source_sys, driver_dest)
+
+    # Create INF file
+    inf_path: string = output_dir + "\\driver.inf"
+    inf_content: string = """
+[Version]
+Signature = "$Windows NT$"
+Class = System
+ClassGuid = {4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider = BoogPP
+DriverVer = 01/01/2025,1.0.0.0
+
+[SourceDisksNames]
+1 = %DiskName%,,,
+
+[SourceDisksFiles]
+driver.sys = 1
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[DefaultInstall]
+CopyFiles = @driver.sys
+
+[DefaultInstall.Services]
+AddService = BoogppDriver,,BoogppDriver_Service
+
+[BoogppDriver_Service]
+DisplayName = %ServiceName%
+ServiceType = 1
+StartType = 3
+ErrorControl = 1
+ServiceBinary = %12%\\driver.sys
+
+[Strings]
+DiskName = "BoogPP Driver Installation Disk"
+ServiceName = "BoogPP Kernel Driver"
+"""
+
+    std.fs.write_file(inf_path, inf_content)
+
+    # Create install script
+    install_script: string = output_dir + "\\install.bat"
+    script_content: string = """
+@echo off
+echo Installing BoogPP Driver...
+pnputil.exe /add-driver driver.inf /install
+sc create BoogppDriver binPath= %~dp0driver.sys type= kernel
+sc start BoogppDriver
+echo Driver installed successfully!
+pause
+"""
+
+    std.fs.write_file(install_script, script_content)
+
+    println(f"Driver package created in {output_dir}")
+
+    return SUCCESS
+
+func main() -> i32:
+    println("===== BoogPP Kernel Driver Manager =====")
+    println("WARNING: This requires administrator privileges!")
+
+    # Enable debug privilege for testing
+    windows.token.enable_privilege(windows.token.PRIVILEGE_DEBUG)
+
+    args: array[string] = get_args()
+
+    if args.length < 2:
+        println("\nUsage:")
+        println("  driver.exe load <path> <service_name>")
+        println("  driver.exe unload <service_name>")
+        println("  driver.exe ioctl <device_name> <code>")
+        println("  driver.exe package <source.sys> <output_dir>")
+        return INVALID_PARAMETER
+
+    command: string = args[1]
+
+    match command:
+        "load":
+            if args.length < 4:
+                println("Error: Load requires driver path and service name")
+                return INVALID_PARAMETER
+            return load_driver(args[2], args[3])
+
+        "unload":
+            if args.length < 3:
+                println("Error: Unload requires service name")
+                return INVALID_PARAMETER
+            return unload_driver(args[2])
+
+        "ioctl":
+            return driver_communication_demo()
+
+        "package":
+            if args.length < 4:
+                println("Error: Package requires source and output directory")
+                return INVALID_PARAMETER
+            return create_driver_package(args[2], args[3])
+
+        _:
+            println(f"Unknown command: {command}")
+            return INVALID_PARAMETER
+
+    return SUCCESS

@@ -1,0 +1,205 @@
+###
+Advanced Registry Editor
+Demonstrates comprehensive registry manipulation
+###
+
+@safety_level(mode: SAFE)
+module registry_editor
+
+import windows.registry
+import std.io
+
+func read_system_info() -> status:
+    """Read system information from registry"""
+
+    println("===== System Information =====")
+
+    # Read Windows version
+    version: array[char, 256]
+    windows.registry.read("HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                         "ProductName", version, 256)
+    println(f"Windows Version: {version}")
+
+    # Read build number
+    build: array[char, 256]
+    windows.registry.read("HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                         "CurrentBuild", build, 256)
+    println(f"Build: {build}")
+
+    # Read registered owner
+    owner: array[char, 256]
+    windows.registry.read("HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                         "RegisteredOwner", owner, 256)
+    println(f"Registered Owner: {owner}")
+
+    return SUCCESS
+
+func enumerate_startup_programs() -> status:
+    """Enumerate programs that start with Windows"""
+
+    println("\n===== Startup Programs =====")
+
+    # Current user startup
+    subkeys: array[ptr[char], 128]
+    count: u64
+
+    windows.registry.enum_values("HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+                                subkeys, 128, &count)
+
+    println("Current User Startup:")
+    for i in range(count):
+        value: array[char, 512]
+        windows.registry.read("HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+                            subkeys[i], value, 512)
+        println(f"  {subkeys[i]}: {value}")
+
+    # All users startup
+    windows.registry.enum_values("HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+                                subkeys, 128, &count)
+
+    println("\nAll Users Startup:")
+    for i in range(count):
+        value: array[char, 512]
+        windows.registry.read("HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+                            subkeys[i], value, 512)
+        println(f"  {subkeys[i]}: {value}")
+
+    return SUCCESS
+
+@resilient(max_retries: 3)
+func backup_registry_key(key_path: string, backup_file: string) -> status:
+    """Backup a registry key to a file"""
+
+    println(f"Backing up {key_path} to {backup_file}...")
+
+    # Enumerate all values
+    value_names: array[ptr[char], 256]
+    count: u64
+
+    windows.registry.enum_values(key_path, value_names, 256, &count)
+
+    # Write to backup file
+    file: handle = std.fs.open(backup_file, "w")
+
+    std.fs.write(file, f"[{key_path}]\n")
+
+    for i in range(count):
+        value: array[char, 1024]
+        windows.registry.read(key_path, value_names[i], value, 1024)
+        std.fs.write(file, f"\"{value_names[i]}\"=\"{value}\"\n")
+
+    std.fs.close(file)
+
+    println(f"Backed up {count} values")
+
+    return SUCCESS
+
+@hook(event: REGISTRY_WRITE)
+func on_registry_write(key: string, value_name: string, data: ptr[u8]) -> void:
+    """Monitor registry writes"""
+    log(f"Registry write: {key}\\{value_name}")
+
+func modify_setting(key: string, value_name: string, new_value: u32) -> status:
+    """Safely modify a DWORD registry setting"""
+
+    # Read current value
+    old_value: u32
+    let read_result = windows.registry.read_dword(key, value_name, &old_value)
+
+    if read_result == SUCCESS:
+        println(f"Current value: {old_value}")
+        println(f"New value: {new_value}")
+
+        # Write new value
+        let write_result = try_chain {
+            windows.registry.write_dword(key, value_name, new_value)
+        } or {
+            # If failed, try with elevated permissions
+            windows.token.enable_privilege(windows.token.PRIVILEGE_RESTORE)
+            windows.registry.write_dword(key, value_name, new_value)
+        } else {
+            println("Failed to write registry value")
+            return GENERIC_ERROR
+        }
+
+        println("Registry value updated successfully")
+        return SUCCESS
+    else:
+        println("Failed to read current value")
+        return read_result
+
+func watch_registry_key(key: string) -> status:
+    """Watch registry key for changes"""
+
+    println(f"Watching {key} for changes...")
+    println("Press Ctrl+C to stop")
+
+    watch_handle: handle
+
+    let callback = func(changed_key: string, change_type: u32, user_data: ptr[void]) -> void:
+        println(f"Registry changed: {changed_key} (type: {change_type})")
+
+    windows.registry.watch(key,
+                          windows.registry.NOTIFY_CHANGE_LAST_SET,
+                          callback, null, &watch_handle)
+
+    # Wait for changes
+    sleep(30000)  # Watch for 30 seconds
+
+    windows.registry.unwatch(watch_handle)
+
+    return SUCCESS
+
+func registry_search(root_key: string, search_term: string) -> status:
+    """Search registry for a specific term"""
+
+    println(f"Searching {root_key} for '{search_term}'...")
+
+    subkeys: array[ptr[char], 512]
+    key_count: u64
+
+    windows.registry.enum_keys(root_key, subkeys, 512, &key_count)
+
+    matches: u32 = 0
+
+    for i in range(key_count):
+        full_key: string = root_key + "\\" + subkeys[i]
+
+        # Check value names
+        value_names: array[ptr[char], 128]
+        value_count: u64
+
+        windows.registry.enum_values(full_key, value_names, 128, &value_count)
+
+        for j in range(value_count):
+            if string_contains(value_names[j], search_term):
+                println(f"Found: {full_key}\\{value_names[j]}")
+                matches++
+            else:
+                # Check value data
+                value: array[char, 1024]
+                if windows.registry.read(full_key, value_names[j], value, 1024) == SUCCESS:
+                    if string_contains(value, search_term):
+                        println(f"Found in data: {full_key}\\{value_names[j]} = {value}")
+                        matches++
+
+    println(f"\nFound {matches} matches")
+
+    return SUCCESS
+
+func main() -> i32:
+    println("===== BoogPP Registry Editor =====")
+
+    # Read system information
+    read_system_info()
+
+    # Enumerate startup programs
+    enumerate_startup_programs()
+
+    # Example: Backup a key
+    backup_registry_key("HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+                       "startup_backup.reg")
+
+    println("\nRegistry operations completed")
+
+    return SUCCESS

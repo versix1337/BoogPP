@@ -1,0 +1,164 @@
+###
+Process Injection Framework
+Demonstrates various injection techniques
+###
+
+@safety_level(mode: UNSAFE)
+module process_injector
+
+import windows.process
+import windows.memory
+import std.io
+
+func inject_dll_classic(target_process: string, dll_path: string) -> status:
+    """Classic DLL injection using CreateRemoteThread"""
+
+    println(f"Injecting {dll_path} into {target_process}...")
+
+    # Find target process
+    processes: array[windows.process.PROCESS_INFO, 256]
+    process_count: u64
+
+    windows.process.list(processes.data, 256, &process_count)
+
+    target_pid: u32 = 0
+    for i in range(process_count):
+        if processes[i].name == target_process:
+            target_pid = processes[i].pid
+            break
+
+    if target_pid == 0:
+        println("Target process not found!")
+        return NOT_FOUND
+
+    # Inject using CreateRemoteThread method
+    let result = windows.process.inject_dll(target_pid, dll_path,
+                                           windows.process.INJECT_CREATEREMOTETHREAD)
+
+    if result == SUCCESS:
+        println("DLL injected successfully!")
+    else:
+        println(f"Injection failed: {result}")
+
+    return result
+
+func inject_shellcode(target_pid: u32, code: array[u8]) -> status:
+    """Inject shellcode into process"""
+
+    println(f"Injecting {code.length} bytes of shellcode into PID {target_pid}")
+
+    let result = windows.process.inject_shellcode(target_pid, code.data,
+                                                  code.length,
+                                                  windows.process.INJECT_CREATEREMOTETHREAD)
+
+    if result == SUCCESS:
+        println("Shellcode injected successfully!")
+        println("Remote thread created")
+    else:
+        println(f"Injection failed: {result}")
+
+    return result
+
+func memory_scanner(target_pid: u32, pattern: array[u8], mask: string) -> status:
+    """Scan process memory for pattern"""
+
+    println(f"Scanning PID {target_pid} for pattern...")
+
+    address: u64 = 0
+    let result = windows.process.find_pattern(target_pid, pattern.data,
+                                             pattern.length, mask, &address)
+
+    if result == SUCCESS:
+        println(f"Pattern found at: 0x{address:X}")
+    else:
+        println("Pattern not found")
+
+    return result
+
+func read_write_memory_demo(target_pid: u32) -> status:
+    """Demonstrate reading and writing process memory"""
+
+    # Allocate memory in target process
+    remote_addr: u64
+    let alloc_result = windows.process.alloc_memory(target_pid, 4096,
+                                                   0x40,  # PAGE_EXECUTE_READWRITE
+                                                   &remote_addr)
+
+    if alloc_result != SUCCESS:
+        println("Failed to allocate memory")
+        return alloc_result
+
+    println(f"Allocated 4096 bytes at: 0x{remote_addr:X}")
+
+    # Write data
+    test_data: array[u8, 64] = "This is a test string from BoogPP!"
+    bytes_written: u64
+
+    windows.process.write_memory(target_pid, remote_addr, test_data.data,
+                                test_data.length, &bytes_written)
+
+    println(f"Wrote {bytes_written} bytes")
+
+    # Read it back
+    read_buffer: array[u8, 64]
+    bytes_read: u64
+
+    windows.process.read_memory(target_pid, remote_addr, read_buffer.data,
+                               64, &bytes_read)
+
+    println(f"Read {bytes_read} bytes: {read_buffer}")
+
+    # Cleanup
+    windows.process.free_memory(target_pid, remote_addr)
+
+    return SUCCESS
+
+@hook(event: PROCESS_CREATION)
+func on_process_created(process_name: string, pid: u32) -> void:
+    """Hook called when a new process is created"""
+    println(f"Process created: {process_name} (PID: {pid})")
+
+    # Auto-inject into specific processes
+    if process_name == "notepad.exe":
+        println("Notepad detected! Auto-injecting monitoring DLL...")
+        inject_dll_classic("notepad.exe", "C:\\tools\\monitor.dll")
+
+func enumerate_modules(target_pid: u32) -> status:
+    """Enumerate loaded modules in a process"""
+
+    println(f"Enumerating modules for PID {target_pid}:")
+
+    module_names: array[ptr[char], 128]
+    module_bases: array[u64, 128]
+    module_count: u64
+
+    windows.process.get_modules(target_pid, module_names.data,
+                               module_bases.data, 128, &module_count)
+
+    for i in range(module_count):
+        println(f"  {module_names[i]} @ 0x{module_bases[i]:X}")
+
+    return SUCCESS
+
+func main() -> i32:
+    println("===== BoogPP Process Injector =====")
+    println("WARNING: This tool requires administrator privileges")
+    println("         and UNSAFE mode enabled")
+
+    # Enable debug privilege
+    windows.token.enable_privilege(windows.token.PRIVILEGE_DEBUG)
+
+    println("\nFeatures:")
+    println("  [1] DLL Injection")
+    println("  [2] Shellcode Injection")
+    println("  [3] Memory Scanner")
+    println("  [4] Memory R/W Demo")
+    println("  [5] Enumerate Modules")
+
+    # Example: Enumerate modules of current process
+    current_pid: u32 = windows.process.get_current_pid()
+    enumerate_modules(current_pid)
+
+    println("\nNote: Actual injection requires proper target and payloads")
+
+    return SUCCESS

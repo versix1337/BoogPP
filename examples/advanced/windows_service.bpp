@@ -1,0 +1,177 @@
+###
+Windows Service Manager
+Create, manage, and control Windows services
+###
+
+@safety_level(mode: UNSAFE)
+module windows_service_manager
+
+import windows.service
+import windows.process
+import std.io
+
+@service(
+    name: "BoogppMonitor",
+    display_name: "BoogPP System Monitor",
+    start_type: AUTO
+)
+func service_main() -> i32:
+    """Main service function"""
+
+    log("BoogPP Monitor Service started")
+
+    # Service loop
+    while service_running():
+        # Monitor system activity
+        monitor_processes()
+        monitor_registry()
+        monitor_filesystem()
+
+        sleep(5000)  # Check every 5 seconds
+
+    log("BoogPP Monitor Service stopped")
+    return SUCCESS
+
+func monitor_processes() -> void:
+    """Monitor running processes"""
+
+    processes: array[windows.process.PROCESS_INFO, 512]
+    count: u64
+
+    windows.process.list(processes, 512, &count)
+
+    # Check for suspicious processes
+    for i in range(count):
+        if is_suspicious(processes[i].name):
+            log(f"Suspicious process detected: {processes[i].name} (PID: {processes[i].pid})")
+
+            # Optional: Terminate suspicious process
+            # windows.process.terminate(processes[i].pid)
+
+func monitor_registry() -> void:
+    """Monitor critical registry keys"""
+    # Watch for changes to startup programs
+    # Implementation here
+
+func monitor_filesystem() -> void:
+    """Monitor critical files"""
+    # Watch for changes to system files
+    # Implementation here
+
+func is_suspicious(process_name: string) -> bool:
+    """Check if a process name is suspicious"""
+
+    suspicious_names: array[string, 10] = [
+        "malware.exe",
+        "backdoor.exe",
+        "keylogger.exe",
+        "ransomware.exe"
+    ]
+
+    for name in suspicious_names:
+        if process_name == name:
+            return true
+
+    return false
+
+func install_service(executable_path: string) -> status:
+    """Install the service"""
+
+    println("Installing BoogPP Monitor Service...")
+
+    let result = windows.service.create("BoogppMonitor",
+                                       "BoogPP System Monitor",
+                                       executable_path)
+
+    if result == SUCCESS:
+        println("Service installed successfully")
+    else:
+        println(f"Installation failed: {result}")
+
+    return result
+
+func uninstall_service() -> status:
+    """Uninstall the service"""
+
+    println("Uninstalling BoogPP Monitor Service...")
+
+    # Stop service if running
+    windows.service.stop("BoogppMonitor")
+
+    # Delete service
+    let result = windows.service.delete("BoogppMonitor")
+
+    if result == SUCCESS:
+        println("Service uninstalled successfully")
+    else:
+        println(f"Uninstall failed: {result}")
+
+    return result
+
+func control_service(command: string) -> status:
+    """Control the service"""
+
+    match command:
+        "start":
+            println("Starting service...")
+            return windows.service.start("BoogppMonitor")
+
+        "stop":
+            println("Stopping service...")
+            return windows.service.stop("BoogppMonitor")
+
+        "restart":
+            println("Restarting service...")
+            windows.service.stop("BoogppMonitor")
+            sleep(1000)
+            return windows.service.start("BoogppMonitor")
+
+        "status":
+            state: windows.service.SERVICE_STATE
+            windows.service.get_state("BoogppMonitor", &state)
+
+            match state:
+                windows.service.RUNNING:
+                    println("Service is RUNNING")
+                windows.service.STOPPED:
+                    println("Service is STOPPED")
+                windows.service.START_PENDING:
+                    println("Service is STARTING...")
+                _:
+                    println(f"Service state: {state}")
+
+            return SUCCESS
+
+        _:
+            println(f"Unknown command: {command}")
+            return INVALID_PARAMETER
+
+func main() -> i32:
+    println("===== BoogPP Service Manager =====")
+
+    # Parse command line arguments
+    args: array[string] = get_args()
+
+    if args.length < 2:
+        println("Usage:")
+        println("  service.exe install <path>")
+        println("  service.exe uninstall")
+        println("  service.exe start|stop|restart|status")
+        return INVALID_PARAMETER
+
+    command: string = args[1]
+
+    match command:
+        "install":
+            if args.length < 3:
+                println("Error: Install requires executable path")
+                return INVALID_PARAMETER
+            return install_service(args[2])
+
+        "uninstall":
+            return uninstall_service()
+
+        _:
+            return control_service(command)
+
+    return SUCCESS

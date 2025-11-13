@@ -1,0 +1,116 @@
+###
+Advanced PE File Patcher Example
+Demonstrates PE manipulation capabilities
+###
+
+@safety_level(mode: UNSAFE)
+module pe_patcher
+
+import windows.pe
+import std.io
+import std.fs
+
+func patch_entry_point(exe_path: string, new_code: array[u8, 16]) -> status:
+    """Patch the entry point of an executable with custom code"""
+
+    # Load PE file
+    pe_data: ptr[u8] = null
+    pe_size: u64 = 0
+
+    let result = try_chain {
+        windows.pe.load(exe_path, &pe_data, &pe_size)
+    } else {
+        println("Failed to load PE file")
+        return GENERIC_ERROR
+    }
+
+    # Get PE information
+    pe_info: windows.pe.PE_INFO
+    windows.pe.get_info(pe_data, &pe_info)
+
+    println("PE Info:")
+    println(f"  Machine: {pe_info.machine}")
+    println(f"  Sections: {pe_info.number_of_sections}")
+    println(f"  Image Base: 0x{pe_info.image_base:X}")
+    println(f"  Entry Point RVA: 0x{pe_info.entry_point:X}")
+
+    # Patch entry point
+    windows.pe.patch_bytes(pe_data, pe_info.entry_point, new_code.data, new_code.length)
+
+    # Recalculate checksum
+    new_checksum: u32
+    windows.pe.calculate_checksum(pe_data, pe_size, &new_checksum)
+
+    # Save patched PE
+    output_path: string = exe_path + ".patched.exe"
+    windows.pe.save(output_path, pe_data, pe_size)
+
+    println(f"Patched PE saved to: {output_path}")
+
+    # Cleanup
+    free(pe_data)
+
+    return SUCCESS
+
+func add_code_cave(exe_path: string, shellcode: array[u8]) -> status:
+    """Add a code cave to an executable"""
+
+    pe_data: ptr[u8]
+    pe_size: u64
+
+    windows.pe.load(exe_path, &pe_data, &pe_size)
+
+    # Add new section for our code
+    windows.pe.add_section(pe_data, ".bppcode", shellcode.data,
+                          shellcode.length, 0x60000020)  # CODE | EXECUTE | READ
+
+    output_path: string = exe_path + ".caved.exe"
+    windows.pe.save(output_path, pe_data, pe_size)
+
+    println(f"Code cave added: {output_path}")
+
+    free(pe_data)
+    return SUCCESS
+
+@resilient(max_retries: 3, timeout: 5000)
+func enumerate_pe_sections(exe_path: string) -> status:
+    """Enumerate all sections in a PE file"""
+
+    pe_data: ptr[u8]
+    pe_size: u64
+
+    windows.pe.load(exe_path, &pe_data, &pe_size)
+
+    sections: array[windows.pe.PE_SECTION, 32]
+    section_count: u64
+
+    windows.pe.get_sections(pe_data, sections.data, 32, &section_count)
+
+    println(f"Found {section_count} sections:")
+
+    for i in range(section_count):
+        let section = sections[i]
+        println(f"  {section.name}")
+        println(f"    RVA: 0x{section.virtual_address:X}")
+        println(f"    Size: {section.virtual_size} bytes")
+        println(f"    Characteristics: 0x{section.characteristics:X}")
+
+    free(pe_data)
+    return SUCCESS
+
+func main() -> i32:
+    println("===== BoogPP PE Patcher =====")
+
+    # Example NOP sled for patching
+    nop_sled: array[u8, 16] = [0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+                                0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90]
+
+    # Test with a sample executable
+    test_exe: string = "C:\\Windows\\System32\\calc.exe"
+
+    # Enumerate sections
+    enumerate_pe_sections(test_exe)
+
+    println("\nNote: Actual patching requires UNSAFE mode and appropriate permissions")
+
+    return SUCCESS
