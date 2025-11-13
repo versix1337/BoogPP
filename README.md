@@ -87,15 +87,14 @@ See [SETUP_QUICK.md](./SETUP_QUICK.md) for details and options.
 ### Quick Start Commands
 
 ```powershell
-# 1) Run automated setup (RECOMMENDED)
-cd C:\BoogPP-main
-powershell -ExecutionPolicy Bypass -File boogpp\setup.ps1
+# 1) Install BoogPP (RECOMMENDED)
+pip install -e .
 
 # 2) Compile your first program to LLVM IR (no linking)
-python -m boogpp.compiler build boogpp\examples\01_hello_world.bpp -o hello_world.exe
+boogpp build examples\01_hello_world.bpp -o hello_world.exe
 
 # 3) Produce a native Windows executable (requires LLVM on PATH)
-python -m boogpp.compiler build boogpp\examples\01_hello_world.bpp -o hello_world.exe --link
+boogpp build examples\01_hello_world.bpp -o hello_world.exe --link
 
 # 4) Run your program
 .\hello_world.exe
@@ -191,51 +190,64 @@ func mainService() -> i32:
 
 ## Installation
 
-### Prerequisites
+### Quick Install (Recommended)
 
-- Python 3.8+
-- Windows PowerShell (Windows 10/11)
-- LLVM 14+ on PATH for native linking (install via `boogpp\scripts\install_llvm.ps1` or system package manager)
-
-### Local Setup (no global install required)
+BoogPP is now available as a Python package for easy installation and updates:
 
 ```powershell
-# From the repo root
-cd C:\BoogPP-main
-pip install -r boogpp\requirements.txt
+# Clone the repository
+git clone https://github.com/versix1337/BoogPP.git
+cd BoogPP
 
-# Optional: install LLVM toolchain for linking
-powershell -ExecutionPolicy Bypass -File boogpp\scripts\install_llvm.ps1
+# Install as a package (development mode)
+pip install -e .
+
+# Verify installation
+boogpp --version
 ```
+
+After installation, the `boogpp` command will be available system-wide.
+
+### Detailed Installation
+
+For complete installation instructions, including LLVM setup, virtual environments, and troubleshooting, see **[INSTALL.md](./INSTALL.md)**.
+
+**Key Points:**
+- **Prerequisites**: Python 3.8+, Windows 10/11
+- **LLVM**: Required for native executable linking (optional for IR generation)
+- **Install modes**: Development mode (`-e`) for editing, regular for end-users
+- **Virtual environments**: Recommended for isolated setups
 
 ---
 
 ## Compilation
 
-### Basic Compilation (module invocation)
+### Basic Compilation
 
 ```powershell
 # Compile to LLVM IR (creates .ll alongside output name)
-python -m boogpp.compiler build path\to\file.bpp -o output.exe
+boogpp build path\to\file.bpp -o output.exe
 
 # Compile and link to native .exe (requires LLVM)
-python -m boogpp.compiler build path\to\file.bpp -o output.exe --link
+boogpp build path\to\file.bpp -o output.exe --link
 
 # Compile a DLL
-python -m boogpp.compiler build path\to\lib.bpp --type dll -o library.dll --link
+boogpp build path\to\lib.bpp --type dll -o library.dll --link
 
 # Compile a kernel driver (.sys)
-python -m boogpp.compiler build path\to\driver.bpp --type driver -o driver.sys --link
+boogpp build path\to\driver.bpp --type driver -o driver.sys --link
 ```
+
+**Note**: You can also use `python -m boogpp.compiler` instead of `boogpp` if preferred.
 
 ### Safety Mode Override
 
 ```powershell
 # Compile in UNSAFE mode
-python -m boogpp.compiler build main.bpp --safety unsafe -o output.exe
+boogpp build main.bpp --safety unsafe -o output.exe
 
 # Compile in CUSTOM mode
-python -m boogpp.compiler build main.bpp --safety custom -o output.exe
+boogpp build main.bpp --safety custom -o output.exe
 ```
 
 ### Optimization Levels
@@ -501,22 +513,22 @@ The BoogPP compiler transforms source code through multiple stages:
 
 **Basic compilation (to LLVM IR):**
 ```powershell
-python -m boogpp.compiler build source.bpp -o output.exe
+boogpp build source.bpp -o output.exe
 ```
 
 **Compile with native linking:**
 ```powershell
-python -m boogpp.compiler build source.bpp -o output.exe --link
+boogpp build source.bpp -o output.exe --link
 ```
 
 **With verbose output:**
 ```powershell
-python -m boogpp.compiler build source.bpp -o output.exe --link --verbose
+boogpp build source.bpp -o output.exe --link --verbose
 ```
 
 **Check syntax and safety (no compilation):**
 ```powershell
-python -m boogpp.compiler check source.bpp --safety safe
+boogpp check source.bpp --safety safe
 ```
 
 For detailed instructions, see [SETUP.md](./SETUP.md).

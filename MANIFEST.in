@@ -1,0 +1,36 @@
+# Include documentation files
+include README.md
+include SETUP.md
+include SETUP_QUICK.md
+include LICENSE
+include requirements.txt
+
+# Include all documentation
+recursive-include docs *
+
+# Include all example programs
+recursive-include examples *.bpp *.md
+
+# Include standard library files
+recursive-include stdlib *.bpp *.c *.h *.ll *.md
+include Makefile.stdlib
+
+# Include runtime files
+recursive-include runtime *.c *.h *.ll *.o *.a *.md
+
+# Include setup scripts
+recursive-include scripts *.ps1 *.sh *.py
+
+# Include example BoogPP programs at root
+include *.bpp
+
+# Exclude Python cache and compiled files
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude *.so
+global-exclude .DS_Store
+global-exclude *.swp
+global-exclude *~
+
+# Exclude git files
+global-exclude .git*
