@@ -4,10 +4,43 @@ This guide explains how to install BoogPP as a Python package for easy maintenan
 
 ## Prerequisites
 
-- **Python 3.8 or higher**
+- **Python 3.8-3.12** (64-bit) - **Important:** Python 3.13+ is not yet supported by llvmlite
 - **pip** (Python package installer)
 - **Windows 10/11** (for full Windows API support)
 - **LLVM 14+** (optional, required for native executable compilation)
+
+## ⚠️ Important for Windows Users
+
+**Before installing, please verify:**
+
+1. **You have 64-bit Python installed** (not 32-bit)
+   - llvmlite does NOT work with 32-bit Python on Windows
+   - Check with: `python -c "import struct; print(struct.calcsize('P') * 8)"`
+   - Should output `64`
+
+2. **You're using Python 3.8-3.12** (not 3.13 or newer)
+   - llvmlite doesn't support Python 3.13 yet
+   - Check with: `python --version`
+   - Recommended: Python 3.11 or 3.12
+
+3. **Your pip is up to date**
+   - Run: `python -m pip install --upgrade pip setuptools wheel`
+
+### Quick Fix for Windows llvmlite Issues
+
+If you encounter "No matching distribution found for llvmlite", run our diagnostic script:
+
+```powershell
+# From the BoogPP directory
+powershell -ExecutionPolicy Bypass -File scripts\fix_llvmlite_windows.ps1
+```
+
+This script will:
+- Check your Python version and architecture
+- Verify pip is up to date
+- Test PyPI connectivity
+- Attempt to install llvmlite with the correct settings
+- Provide specific solutions if issues are found
 
 ## Installation Methods
 
@@ -234,6 +267,113 @@ pip uninstall boogpp
 ```
 
 ## Troubleshooting
+
+### "No matching distribution found for llvmlite>=0.43.0"
+
+This is a common issue with llvmlite installation. Try these solutions in order:
+
+#### Solution 1: Upgrade pip, setuptools, and wheel
+
+```bash
+# Upgrade pip and build tools
+pip install --upgrade pip setuptools wheel
+```
+
+Then retry the installation:
+```bash
+pip install -e .
+```
+
+#### Solution 2: Install llvmlite separately first
+
+```bash
+# Install llvmlite explicitly
+pip install llvmlite>=0.43.0
+
+# Then install BoogPP
+pip install -e .
+```
+
+#### Solution 3: Use a compatible Python version
+
+llvmlite requires Python 3.8-3.12. Check your Python version:
+
+```bash
+python --version
+```
+
+If you're using an unsupported version, install Python 3.11 (recommended):
+- Download from https://www.python.org/downloads/
+- Or use pyenv/conda to manage multiple Python versions
+
+#### Solution 4: Platform-specific issues
+
+**On Windows:**
+- Install Microsoft Visual C++ 14.0 or greater from:
+  https://visualstudio.microsoft.com/visual-cpp-build-tools/
+- Or use pre-built wheels by upgrading pip (Solution 1)
+
+**On Linux:**
+- Install LLVM development libraries:
+  ```bash
+  # Ubuntu/Debian
+  sudo apt-get update
+  sudo apt-get install llvm-14-dev
+
+  # Fedora/RHEL
+  sudo dnf install llvm-devel
+
+  # Arch Linux
+  sudo pacman -S llvm
+  ```
+
+**On macOS:**
+- Install LLVM via Homebrew:
+  ```bash
+  brew install llvm@14
+  ```
+
+#### Solution 5: Use a virtual environment
+
+Sometimes system-wide installations have conflicts. Use a virtual environment:
+
+```bash
+# Create a fresh virtual environment
+python -m venv boogpp_env
+
+# Activate it
+# Windows:
+boogpp_env\Scripts\activate
+# Linux/macOS:
+source boogpp_env/bin/activate
+
+# Upgrade pip in the virtual environment
+pip install --upgrade pip setuptools wheel
+
+# Install BoogPP
+pip install -e .
+```
+
+#### Solution 6: Install a specific version
+
+If the latest llvmlite version has issues, try a specific version:
+
+```bash
+pip install llvmlite==0.43.0
+pip install -e .
+```
+
+#### Solution 7: Check network and proxy settings
+
+If you're behind a corporate proxy or firewall:
+
+```bash
+# Use a different PyPI mirror
+pip install --index-url https://pypi.org/simple/ llvmlite>=0.43.0
+
+# Or configure proxy
+pip install --proxy http://user:password@proxy:port llvmlite>=0.43.0
+```
 
 ### Command 'boogpp' not found
 
