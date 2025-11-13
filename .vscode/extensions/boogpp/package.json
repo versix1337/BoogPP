@@ -1,0 +1,141 @@
+{
+  "name": "boogpp",
+  "displayName": "BoogPP Language Support",
+  "description": "Syntax highlighting, IntelliSense, and debugging support for BoogPP",
+  "version": "3.0.0",
+  "publisher": "boogpp",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Debuggers",
+    "Formatters",
+    "Linters"
+  ],
+  "keywords": [
+    "boogpp",
+    "systems programming",
+    "windows",
+    "llvm"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:boogpp"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "boogpp",
+        "aliases": [
+          "BoogPP",
+          "boogpp"
+        ],
+        "extensions": [
+          ".bpp"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/boogpp-icon.png",
+          "dark": "./icons/boogpp-icon.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "boogpp",
+        "scopeName": "source.boogpp",
+        "path": "./syntaxes/boogpp.tmLanguage.json"
+      }
+    ],
+    "themes": [
+      {
+        "label": "BoogPP Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/boogpp-dark.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "boogpp.build",
+        "title": "BoogPP: Build"
+      },
+      {
+        "command": "boogpp.run",
+        "title": "BoogPP: Run"
+      },
+      {
+        "command": "boogpp.check",
+        "title": "BoogPP: Check Syntax"
+      },
+      {
+        "command": "boogpp.format",
+        "title": "BoogPP: Format Document"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "boogpp.build",
+        "key": "ctrl+shift+b",
+        "when": "editorLangId == boogpp"
+      },
+      {
+        "command": "boogpp.run",
+        "key": "ctrl+f5",
+        "when": "editorLangId == boogpp"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "BoogPP Configuration",
+      "properties": {
+        "boogpp.compilerPath": {
+          "type": "string",
+          "default": "boogpp",
+          "description": "Path to the BoogPP compiler"
+        },
+        "boogpp.buildOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically build on save"
+        },
+        "boogpp.safetyMode": {
+          "type": "string",
+          "enum": [
+            "SAFE",
+            "UNSAFE",
+            "CUSTOM"
+          ],
+          "default": "SAFE",
+          "description": "Default safety mode"
+        },
+        "boogpp.llvmPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to LLVM installation"
+        }
+      }
+    },
+    "snippets": [
+      {
+        "language": "boogpp",
+        "path": "./snippets/boogpp.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.0.0",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.1.0"
+  }
+}

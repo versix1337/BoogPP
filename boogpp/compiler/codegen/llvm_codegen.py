@@ -7,6 +7,11 @@ from typing import Optional, Dict, List, Any
 from ..parser.ast_nodes import *
 from ..typechecker.type_system import Type, TypeKind, PRIMITIVE_TYPES
 
+try:
+    from ..parser.ast_nodes import TryChainExpr
+except ImportError:
+    TryChainExpr = None
+
 
 class LLVMCodeGenerator:
     """Generates LLVM IR code from AST"""
@@ -309,6 +314,12 @@ class LLVMCodeGenerator:
             # Would need loop context
             self._emit("br label %continue")
 
+        elif isinstance(stmt, MatchStmt):
+            self.generate_match_statement(stmt)
+
+        elif isinstance(stmt, DeferStmt):
+            self.generate_defer_statement(stmt)
+
     def generate_if_statement(self, stmt: IfStmt) -> None:
         """Generate code for if statement"""
         then_label = self._new_label("if.then")
@@ -400,6 +411,65 @@ class LLVMCodeGenerator:
         # Full implementation would handle iterators properly
         self._emit("; for loop (simplified)")
 
+    def generate_match_statement(self, stmt) -> None:
+        """Generate code for match statement"""
+        # Evaluate the value being matched
+        value_reg = self.generate_expression(stmt.value)
+        value_type = self._get_expression_type(stmt.value)
+        llvm_type = self._get_llvm_type(value_type)
+
+        end_label = self._new_label("match.end")
+        case_labels = [self._new_label(f"match.case{i}") for i in range(len(stmt.cases))]
+        next_labels = [self._new_label(f"match.next{i}") for i in range(len(stmt.cases))]
+
+        # Generate comparison and branching for each case
+        for i, case in enumerate(stmt.cases):
+            self._dedent()
+            self._emit(f"{case_labels[i]}:")
+            self._indent()
+
+            # Generate pattern comparison
+            pattern_reg = self.generate_expression(case.pattern)
+            cmp_reg = self._new_register()
+
+            if value_type.is_float():
+                self._emit(f"{cmp_reg} = fcmp oeq {llvm_type} {value_reg}, {pattern_reg}")
+            else:
+                self._emit(f"{cmp_reg} = icmp eq {llvm_type} {value_reg}, {pattern_reg}")
+
+            # If match, execute case body, else try next case
+            body_label = self._new_label(f"match.body{i}")
+            next_label = next_labels[i] if i < len(next_labels) else end_label
+
+            self._emit(f"br i1 {cmp_reg}, label %{body_label}, label %{next_label}")
+
+            # Case body
+            self._dedent()
+            self._emit(f"{body_label}:")
+            self._indent()
+            self.generate_statement(case.body)
+            self._emit(f"br label %{end_label}")
+
+            # Next case
+            if i < len(next_labels):
+                self._dedent()
+                self._emit(f"{next_labels[i]}:")
+                self._indent()
+
+        # End of match
+        self._dedent()
+        self._emit(f"{end_label}:")
+        self._indent()
+
+    def generate_defer_statement(self, stmt) -> None:
+        """Generate code for defer statement"""
+        # Deferred statements are executed at function exit
+        # For now, we'll just emit a comment
+        # Full implementation would require tracking deferred statements
+        # and emitting them before all return statements
+        self._emit("; defer (not fully implemented)")
+        self.generate_statement(stmt.statement)
+
     def generate_assignment(self, stmt: AssignStmt) -> None:
         """Generate code for assignment"""
         # Get target (must be an identifier for now)
@@ -462,6 +532,9 @@ class LLVMCodeGenerator:
 
         elif isinstance(expr, ArrayExpr):
             return self.generate_array_expr(expr)
+
+        elif TryChainExpr and isinstance(expr, TryChainExpr):
+            return self.generate_try_chain_expr(expr)
 
         else:
             # Default fallback
@@ -726,23 +799,198 @@ class LLVMCodeGenerator:
 
     def generate_member_expr(self, expr: MemberExpr) -> str:
         """Generate code for member access"""
-        # Simplified version
+        obj_reg = self.generate_expression(expr.object)
+        result_reg = self._new_register()
+
+        # Get struct type and field index
+        obj_type = self._get_expression_type(expr.object)
+
+        if obj_type.kind == TypeKind.STRUCT:
+            # Find field index
+            field_idx = 0
+            for i, field in enumerate(obj_type.fields):
+                if field.name == expr.member:
+                    field_idx = i
+                    break
+
+            # Extract field from struct
+            field_type = obj_type.fields[field_idx].type
+            llvm_field_type = self._get_llvm_type(field_type)
+            self._emit(f"{result_reg} = extractvalue {self._get_llvm_type(obj_type)} {obj_reg}, {field_idx}")
+            return result_reg
+
         return "0"
 
     def generate_index_expr(self, expr: IndexExpr) -> str:
         """Generate code for array indexing"""
-        # Simplified version
+        obj_reg = self.generate_expression(expr.object)
+        index_reg = self.generate_expression(expr.index)
+
+        obj_type = self._get_expression_type(expr.object)
+
+        if obj_type.kind == TypeKind.ARRAY:
+            # Array indexing - GEP into array
+            elem_type = obj_type.element_type
+            llvm_elem_type = self._get_llvm_type(elem_type)
+            llvm_array_type = self._get_llvm_type(obj_type)
+
+            ptr_reg = self._new_register()
+            self._emit(f"{ptr_reg} = getelementptr {llvm_array_type}, {llvm_array_type}* {obj_reg}, i32 0, i32 {index_reg}")
+
+            result_reg = self._new_register()
+            self._emit(f"{result_reg} = load {llvm_elem_type}, {llvm_elem_type}* {ptr_reg}")
+            return result_reg
+
+        elif obj_type.kind == TypeKind.SLICE:
+            # Slice indexing - get ptr, offset by index, load
+            elem_type = obj_type.element_type
+            llvm_elem_type = self._get_llvm_type(elem_type)
+
+            # Extract data pointer from slice
+            ptr_reg = self._new_register()
+            self._emit(f"{ptr_reg} = extractvalue {self._get_llvm_type(obj_type)} {obj_reg}, 0")
+
+            # GEP with index
+            elem_ptr_reg = self._new_register()
+            self._emit(f"{elem_ptr_reg} = getelementptr {llvm_elem_type}, {llvm_elem_type}* {ptr_reg}, i64 {index_reg}")
+
+            # Load element
+            result_reg = self._new_register()
+            self._emit(f"{result_reg} = load {llvm_elem_type}, {llvm_elem_type}* {elem_ptr_reg}")
+            return result_reg
+
         return "0"
 
     def generate_tuple_expr(self, expr: TupleExpr) -> str:
         """Generate code for tuple literal"""
-        # Simplified version
-        return "0"
+        if not expr.elements:
+            return "0"
+
+        # Generate each element
+        element_regs = []
+        element_types = []
+        for elem in expr.elements:
+            elem_reg = self.generate_expression(elem)
+            elem_type = self._get_expression_type(elem)
+            element_regs.append(elem_reg)
+            element_types.append(self._get_llvm_type(elem_type))
+
+        # Build tuple type
+        tuple_type = f"{{ {', '.join(element_types)} }}"
+
+        # Allocate tuple on stack
+        tuple_reg = self._new_register()
+        self._emit(f"{tuple_reg} = alloca {tuple_type}")
+
+        # Insert each element
+        for i, (elem_reg, elem_type) in enumerate(zip(element_regs, element_types)):
+            field_ptr = self._new_register()
+            self._emit(f"{field_ptr} = getelementptr {tuple_type}, {tuple_type}* {tuple_reg}, i32 0, i32 {i}")
+            self._emit(f"store {elem_type} {elem_reg}, {elem_type}* {field_ptr}")
+
+        # Load the completed tuple
+        result_reg = self._new_register()
+        self._emit(f"{result_reg} = load {tuple_type}, {tuple_type}* {tuple_reg}")
+        return result_reg
 
     def generate_array_expr(self, expr: ArrayExpr) -> str:
         """Generate code for array literal"""
-        # Simplified version
-        return "0"
+        if not expr.elements:
+            return "0"
+
+        # Generate each element
+        element_regs = []
+        elem_type = self._get_expression_type(expr.elements[0])
+        llvm_elem_type = self._get_llvm_type(elem_type)
+
+        for elem in expr.elements:
+            elem_reg = self.generate_expression(elem)
+            element_regs.append(elem_reg)
+
+        # Build array type
+        array_size = len(expr.elements)
+        array_type = f"[{array_size} x {llvm_elem_type}]"
+
+        # Allocate array on stack
+        array_reg = self._new_register()
+        self._emit(f"{array_reg} = alloca {array_type}")
+
+        # Store each element
+        for i, elem_reg in enumerate(element_regs):
+            elem_ptr = self._new_register()
+            self._emit(f"{elem_ptr} = getelementptr {array_type}, {array_type}* {array_reg}, i32 0, i32 {i}")
+            self._emit(f"store {llvm_elem_type} {elem_reg}, {llvm_elem_type}* {elem_ptr}")
+
+        # Load the completed array
+        result_reg = self._new_register()
+        self._emit(f"{result_reg} = load {array_type}, {array_type}* {array_reg}")
+        return result_reg
+
+    def generate_try_chain_expr(self, expr) -> str:
+        """Generate code for try_chain expression with resilience"""
+        # try_chain { primary } or { secondary } else { fallback }
+
+        # Labels for control flow
+        primary_label = self._new_label("trychain.primary")
+        secondary_label = self._new_label("trychain.secondary") if expr.secondary else None
+        fallback_label = self._new_label("trychain.fallback") if expr.fallback else None
+        end_label = self._new_label("trychain.end")
+
+        # Allocate result register
+        result_type = self._get_expression_type(expr.primary)
+        llvm_type = self._get_llvm_type(result_type)
+        result_ptr = self._new_register()
+        self._emit(f"{result_ptr} = alloca {llvm_type}")
+
+        # Try primary
+        self._emit(f"br label %{primary_label}")
+        self._dedent()
+        self._emit(f"{primary_label}:")
+        self._indent()
+
+        primary_reg = self.generate_expression(expr.primary)
+        # Check if result is SUCCESS
+        success_check = self._new_register()
+        self._emit(f"{success_check} = icmp eq i32 {primary_reg}, 0")
+
+        if expr.secondary:
+            self._emit(f"br i1 {success_check}, label %{end_label}, label %{secondary_label}")
+
+            # Try secondary
+            self._dedent()
+            self._emit(f"{secondary_label}:")
+            self._indent()
+            secondary_reg = self.generate_expression(expr.secondary)
+            secondary_check = self._new_register()
+            self._emit(f"{secondary_check} = icmp eq i32 {secondary_reg}, 0")
+
+            if expr.fallback:
+                self._emit(f"br i1 {secondary_check}, label %{end_label}, label %{fallback_label}")
+            else:
+                self._emit(f"br label %{end_label}")
+        else:
+            if expr.fallback:
+                self._emit(f"br i1 {success_check}, label %{end_label}, label %{fallback_label}")
+            else:
+                self._emit(f"br label %{end_label}")
+
+        # Fallback if provided
+        if expr.fallback:
+            self._dedent()
+            self._emit(f"{fallback_label}:")
+            self._indent()
+            fallback_reg = self.generate_expression(expr.fallback)
+            self._emit(f"store {llvm_type} {fallback_reg}, {llvm_type}* {result_ptr}")
+            self._emit(f"br label %{end_label}")
+
+        # End
+        self._dedent()
+        self._emit(f"{end_label}:")
+        self._indent()
+
+        result_reg = self._new_register()
+        self._emit(f"{result_reg} = load {llvm_type}, {llvm_type}* {result_ptr}")
+        return result_reg
 
     def _get_expression_type(self, expr: Expression) -> Type:
         """Get the type of an expression"""

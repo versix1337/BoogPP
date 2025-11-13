@@ -1,0 +1,185 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ created ]
+
+jobs:
+  test-compiler:
+    name: Test Compiler
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        exclude:
+          # llvmlite doesn't support Python 3.13+
+          - python-version: '3.13'
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Run linters
+      run: |
+        pylint boogpp
+        mypy boogpp
+        black --check boogpp
+
+    - name: Run tests
+      run: |
+        pytest tests/ -v --cov=boogpp --cov-report=xml
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-${{ matrix.os }}-py${{ matrix.python-version }}
+
+  build-runtime-windows:
+    name: Build Runtime (Windows)
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Build Runtime and stdlib
+      run: |
+        .\scripts\build_windows.ps1 -Configuration Release
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: boogpp-runtime-windows
+        path: build/Release/
+
+  build-examples:
+    name: Build Example Programs
+    needs: [test-compiler, build-runtime-windows]
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install BoogPP
+      run: |
+        pip install -e .
+
+    - name: Download runtime
+      uses: actions/download-artifact@v3
+      with:
+        name: boogpp-runtime-windows
+
+    - name: Build examples
+      run: |
+        $examples = Get-ChildItem -Path examples -Filter *.bpp -Recurse
+        foreach ($example in $examples) {
+          Write-Host "Building $($example.FullName)"
+          boogpp build $example.FullName -o "build/examples/$($example.BaseName).exe"
+        }
+
+    - name: Upload example binaries
+      uses: actions/upload-artifact@v3
+      with:
+        name: example-programs
+        path: build/examples/
+
+  integration-tests:
+    name: Integration Tests
+    needs: [build-runtime-windows, build-examples]
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Run integration tests
+      run: |
+        pytest tests/integration/ -v
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Run Bandit
+      run: |
+        pip install bandit
+        bandit -r boogpp/ -f json -o bandit-report.json
+
+    - name: Upload security report
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-report
+        path: bandit-report.json
+
+  create-release:
+    name: Create Release
+    if: github.event_name == 'release'
+    needs: [test-compiler, build-runtime-windows, build-examples, integration-tests]
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Create distribution package
+      run: |
+        New-Item -ItemType Directory -Path dist
+        Compress-Archive -Path boogpp-runtime-windows/* -DestinationPath dist/boogpp-runtime-windows.zip
+        Compress-Archive -Path example-programs/* -DestinationPath dist/boogpp-examples.zip
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/boogpp-runtime-windows.zip
+          dist/boogpp-examples.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-pypi:
+    name: Publish to PyPI
+    if: github.event_name == 'release'
+    needs: [create-release]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Build package
+      run: |
+        pip install build
+        python -m build
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
