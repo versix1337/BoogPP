@@ -29,3 +29,7 @@ tools/llvm/
 Thumbs.db
 Desktop.ini
 .DS_Store
+boogpp.egg-info/
+*.egg-info/
+dist/
+build/
